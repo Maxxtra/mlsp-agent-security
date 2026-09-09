@@ -10,6 +10,12 @@ User -> LLM -> Filtru -> Unealtă
 
 Echipa: Șerban (agentul și uneltele), Vlad (suita de atacuri), Mihai (apărarea și evaluarea).
 
+## Planul tău, pas cu pas
+
+- [Șerban](docs/plan-serban.md)
+- [Vlad](docs/plan-vlad.md)
+- [Mihai](docs/plan-mihai.md)
+
 ## Setup (10 minute)
 
 ```bash

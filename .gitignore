@@ -6,3 +6,4 @@ logs/*.jsonl
 sandbox/outbox/*
 !sandbox/outbox/.gitkeep
 sandbox/files/document.txt
+docs/*.html
