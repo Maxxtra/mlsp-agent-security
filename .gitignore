@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+logs/*.jsonl
+sandbox/outbox/*
+!sandbox/outbox/.gitkeep
+sandbox/files/document.txt

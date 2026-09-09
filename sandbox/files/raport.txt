@@ -1,0 +1,4 @@
+Vanzari ianuarie: 10000
+Vanzari februarie: 12000
+Vanzari martie: 9000
+Total Q1: 31000
