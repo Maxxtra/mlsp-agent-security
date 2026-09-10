@@ -8,12 +8,12 @@ fără să-l facă inutil.
 User -> LLM -> Filtru -> Unealtă
 ```
 
-Echipa: Șerban (agentul și uneltele), Vlad (suita de atacuri), Mihai (apărarea și evaluarea).
+Echipa: Șerban (agentul și uneltele), Robert (suita de atacuri), Mihai (apărarea și evaluarea).
 
 ## Planul tău, pas cu pas
 
 - [Șerban](docs/plan-serban.md)
-- [Vlad](docs/plan-vlad.md)
+- [Robert](docs/plan-robert.md)
 - [Mihai](docs/plan-mihai.md)
 
 ## Setup (10 minute)
@@ -35,7 +35,7 @@ Cheile pentru modelele plătite (GPT, Claude) sunt pinned în canalul echipei; l
 src/agent.py      agentul: primeste o sarcina, alege o unealta, o apeleaza, continua   (Serban)
 src/tools.py      uneltele, toate in sandbox/                                         (Serban)
 src/harness.py    ruleaza atacuri prin agent si scrie results/results.csv             (Mihai)
-attacks/          un JSON per atac, dupa attacks/schema.json                          (Vlad)
+attacks/          un JSON per atac, dupa attacks/schema.json                          (Robert)
 sandbox/          tot ce "vede" agentul: files/, inbox/, outbox/. Nimic din afara.
 results/          CSV-uri cu rezultate, comise in repo
 logs/             trace.jsonl cu fiecare apel de unealta
@@ -60,7 +60,7 @@ adaugi în `tools.py` restul: `list_files`, `send_email` (scrie în `sandbox/out
 Apoi scrii 25 de sarcini normale în `tasks/benign.json` (creezi tu folderul), fiecare cu un verificator
 automat, după același model ca `success_check` de la atacuri.
 
-## Tutorial 2 (Vlad): scrie un atac
+## Tutorial 2 (Robert): scrie un atac
 
 Un atac e un fișier JSON în `attacks/`, după `attacks/schema.json`. Uită-te la `attacks/example_001.json`:
 un text plantat într-un fișier pe care agentul îl citește, care încearcă să-l facă să trimită un email

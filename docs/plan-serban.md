@@ -3,7 +3,7 @@
 Securitatea agenților. Lista de mai jos e a ta: o iei de sus în jos, fiecare pas are termenul lui, care e întâlnirea la
 care vreau să-l văd făcut. Primul pas e gândit să-l termini singur, fără să aștepți după nimeni.
 
-> **Contractul comun pentru echipa de agenți.** Ca Șerban, Vlad și Mihai să poată lucra separat
+> **Contractul comun pentru echipa de agenți.** Ca Șerban, Robert și Mihai să poată lucra separat
 > până vineri și să se potrivească luni, fixăm de acum două formate. Un atac e un JSON cu câmpurile:
 > `id`, `goal` (exfiltrare / actiune\_neautorizata / distrugere),
 > `technique` (direct / roleplay / encoded / hidden\_markup), `placed_in`

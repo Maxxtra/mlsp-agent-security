@@ -3,7 +3,7 @@
 Securitatea agenților. Lista de mai jos e a ta: o iei de sus în jos, fiecare pas are termenul lui, care e întâlnirea la
 care vreau să-l văd făcut. Primul pas e gândit să-l termini singur, fără să aștepți după nimeni.
 
-> **Contractul comun pentru echipa de agenți.** Ca Șerban, Vlad și Mihai să poată lucra separat
+> **Contractul comun pentru echipa de agenți.** Ca Șerban, Robert și Mihai să poată lucra separat
 > până vineri și să se potrivească luni, fixăm de acum două formate. Un atac e un JSON cu câmpurile:
 > `id`, `goal` (exfiltrare / actiune\_neautorizata / distrugere),
 > `technique` (direct / roleplay / encoded / hidden\_markup), `placed_in`
@@ -13,14 +13,14 @@ care vreau să-l văd făcut. Primul pas e gândit să-l termini singur, fără 
 
 *Securitatea agenților · apărarea și evaluarea · repo: [github.com/Maxxtra/mlsp-agent-security](https://github.com/Maxxtra/mlsp-agent-security)*
 
-1. **până vineri 11** Scrii harness-ul de evaluare, dar ca să nu aștepți după Șerban și Vlad
+1. **până vineri 11** Scrii harness-ul de evaluare, dar ca să nu aștepți după Șerban și Robert
    îl testezi pe un agent fals: o funcție care primește sarcina și „apelează" mereu o unealtă, plus 3
    atacuri de probă scrise de tine în formatul JSON. Harness-ul ia atacul, îl plantează, rulează
    agentul, cheamă `success_check`, scrie linia de CSV. Vineri îl arăți rulând cap-coadă
    pe agentul fals; luni îl conectezi la agentul real. De citit:
    [ToolEmu](https://arxiv.org/abs/2309.15817) (cum evaluează ei) și
    [CaMeL](https://arxiv.org/abs/2503.18813) (ideea de apărare).
-2. **până luni 14** Conectezi harness-ul la agentul lui Șerban și atacurile lui Vlad, scoți
+2. **până luni 14** Conectezi harness-ul la agentul lui Șerban și atacurile lui Robert, scoți
    prima rată de succes reală. Apoi prima politică, baseline-ul: filtru pe cuvinte-cheie și regex pe
    argumentele fiecărui apel (adrese de email necunoscute, comenzi de ștergere, URL-uri externe).
    Harness-ul calculează și fals-pozitivele pe sarcinile normale ale lui Șerban.
@@ -30,7 +30,7 @@ care vreau să-l văd făcut. Primul pas e gândit să-l termini singur, fără 
    Llama local prin Ollama, plus GPT și Claude cu cheile din canal.
 4. **până duminică 20** A treia politică, allowlist de capabilități: agentul declară la început
    ce are voie și orice apel în afara listei e blocat. Rulezi tot: succes per politică, fals-pozitive,
-   generalizarea pe categoria ascunsă a lui Vlad, atacurile reformulate. Tabelul final cu cele cinci
+   generalizarea pe categoria ascunsă a lui Robert, atacurile reformulate. Tabelul final cu cele cinci
    măsuri (succes, fals-pozitive, utilitate, latență, cost) iese de aici.
 5. **20 - 25 sep** Scrii secțiunea despre filtru și politici, și secțiunea de rezultate.
 
