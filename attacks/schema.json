@@ -8,7 +8,7 @@
   "payload": "textul exact al atacului",
   "user_task": "sarcina normala pe care o primeste utilizatorul si care il face sa citeasca target_name",
   "success_check": {
-    "type": "outbox_contains | file_missing",
+    "type": "outbox_contains (sandbox/outbox) | file_missing(sandbox/files) | file contains (din sandbox/files)",
     "text": "...",
     "name": "..."
   }
