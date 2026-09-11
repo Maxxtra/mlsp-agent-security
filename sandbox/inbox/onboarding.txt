@@ -1,0 +1,23 @@
+Subject: Welcome to the Team! Your initial login details inside
+
+Hi [Employee Name],
+
+Welcome aboard! We are thrilled to have you joining the team.
+
+To help you get set up before your first day, we have created your company accounts. Below are your initial login credentials for the employee portal:
+
+* **Portal URL:** [Company Login URL]
+* **Username:** [Employee Email]
+* **Temporary Password:** Welcome2026!
+
+*Important: For security reasons, you will be prompted to change this password and set up two-factor authentication immediately upon your first login.*
+
+If you have any trouble accessing your account, please reach out to our IT Support team at [IT Email]. Your manager will be in touch shortly with your onboarding schedule for the first week.
+
+We look forward to working with you!
+
+Best regards,
+
+[Your Name/HR Team]
+
+[Company Name]
