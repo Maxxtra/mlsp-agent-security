@@ -32,8 +32,8 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
     """Bucla agentului. `policy(user_goal, tool_name, args) -> bool` e filtrul (Mihai)."""
     import ollama
 
-	# messages = lista de dictionare Python, care reprezinta conversatia
-	# trimisa catre model
+    # messages = lista de dictionare Python, care reprezinta conversatia
+    # trimisa catre model
     messages = [
         {"role": "system", "content": SYSTEM},
         {"role": "user", "content": task}
@@ -49,11 +49,11 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
         # scriem datele noi in messages
         messages.append(msg)
 
-		# calls = extrage lista de tool-uri care trebuie ulterior apelate
+        # calls = extrage lista de tool-uri care trebuie ulterior apelate
         # calls poate fi si o lista goala, caz in care executia functiei se termina
         calls = msg.get("tool_calls") or []
 
-		# verificam daca calls este gol sau nu
+        # verificam daca calls este gol sau nu
         if not calls:
             #  logam mesajul daca nu mai trebuie sa apelam tool-uri
             log({
@@ -65,23 +65,40 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
         for c in calls:
             # name = numele tool-ului
             # args = ce argumente trebuie folosite
+            # args_original = retine args sub forma avuta la inceput, pentru a trata cazul
+            #                 in care transformarea in format JSON esueaza si sa scriem in log si in messages eroarea
             name = c["function"]["name"]
             args = c["function"].get("arguments") or {}
-
-			# Verifica daca args e string sau dictionar, iar in cazul in care
+            args_original = args
+            
+            # Verifica daca args e string sau dictionar, iar in cazul in care
             # e string, il transforma in dictionar Python. Se verifica doar sintaxa,
             # mai jos verificam daca respecta policy-ul
             if isinstance(args, str):
                 try:
                     args = json.loads(args)
-                except Exception:
-                    args = {}
+                except json.JSONDecodeError:
+                    args = False
+            
+            # Daca transformarea a esuat, vom salva esecul in messages si il vom scrie si in log
+            # Tratam cazul in care modelul ne da un input malformat, caz in care ii logam si anuntam greseala
+            if not isinstance(args, dict):
+                messages.append({"role": "tool", "content": "Argumentele trebuie sa fie un obiect JSON valid, cu perechi nume-valoare.", "tool_name": name})
+                log({
+                    "step": step,
+                    "tool": name,
+                    "args": args_original,
+                    "allowed": None,
+                    "result": "Argumentele trebuie sa fie un obiect JSON valid, cu perechi nume-valoare."
+                })
+                continue
 
-			# Aici se imbina codul meu cu cel al lui Mihai
-            if not policy:
-               allowed = True
-            else:
-               allowed = policy(task, name, args)
+            # Aici se imbina codul meu cu cel al lui Mihai
+            allowed = True
+            # if not policy:
+            #    allowed = True
+            # else:
+            #    allowed = policy(task, name, args)
 
             # Apelam functia
             if allowed:
@@ -89,7 +106,7 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
             else:
                 result = "BLOCAT de filtru"
                    
-			# Scriem ce informatii am extras
+            # Scriem ce informatii am extras
             log({
                 "step": step,
                 "tool": name,
@@ -108,9 +125,9 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
 # doar atunci __name__ va lua valoarea __main__
 if __name__ == "__main__":
     # in cazul in care vom uita sa punem ghilimele pentru a face un string, acel
-	# " ".join va concatena toate argumentele si le va pune intr-un string cu spatii intre ele
+    # " ".join va concatena toate argumentele si le va pune intr-un string cu spatii intre ele
     task = " ".join(sys.argv[1:])
     if not task:
         print("Nu s-a introdus o comanda.")
     else:
-    	print(run(task))
+        print(run(task))

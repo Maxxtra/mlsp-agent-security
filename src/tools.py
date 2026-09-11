@@ -23,11 +23,17 @@ def _safe(base, name):
 # FILESYSTEM:
 def read_file(name: str) -> str:
     """Citeste un fisier din sandbox/files."""
-    try:
-        with open(_safe(FILES, name), encoding="utf-8") as f:
+    path = _safe(FILES, name)
+
+	# Verificam daca exista ceva la calea data
+    if not os.path.exists(path):
+        return "Nu exista nimic cu numele introdus. list_files iti arata fisierele disponibile."
+    
+    if os.path.isfile(path):
+        with open(path, encoding="utf-8") as f:
             return f.read()
-    except FileNotFoundError:
-        return "Fisierul nu exista. list_files iti arata fisierele disponibile."
+    else:
+        return "Numele introdus nu este un fisier. list_files iti arata fisierele disponibile."
 
 def list_files() -> str:
     """Listeaza fisierele din sandbox/files."""
@@ -114,7 +120,10 @@ TOOLS = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "expression": {"type": "string"}
+                    "expression": {
+                        "type": "string",
+                        "description": ""
+                    }
                 },
                 "required": ["expression"]
             },
