@@ -126,3 +126,9 @@ Un tool nu este luat in considerare daca:
 
 ### 2. Tratarea erorilor, redirectarea catre alt tool in caz de eroare
 > Nota: in general, mesajul erorilor trebuie sa fie cat mai mic, fiindca modelul nu face distinctia intre textul meu(sigur) si un potential prompt injection(periculos). El doar primeste text de la tool-uri.
+
+
+## Intrebari:
+* la calculator trebuie sa implementez si functii din mathlib sau raman doar pe un calculator simplu, care raspunde la intrebari de tipul "1 + 2 = 3"?
+* implementam sau nu **
+* comenzile pentru terminal
