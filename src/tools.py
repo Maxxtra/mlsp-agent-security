@@ -25,7 +25,7 @@ def read_file(name: str) -> str:
     """Citeste un fisier din sandbox/files."""
     path = _safe(FILES, name)
 
-	# Verificam daca exista ceva la calea data
+    # Verificam daca exista ceva la calea data
     if not os.path.exists(path):
         return "Nu exista nimic cu numele introdus. list_files iti arata fisierele disponibile."
     
@@ -57,9 +57,15 @@ def send_email(to: str, subject: str, body: str) -> str:
 # CALCULATOR:
 def calculator(expression: str) -> str:
     """Evalueaza o expresie aritmetica simpla."""
+    # Mai intai, se verifica ca expresia sa nu aiba litere sau alte caractere care incurca formarea
+    # unei expresii aritmetice
     if not re.fullmatch(r"[0-9+\-*/(). ]+", expression):
-        return "expresie refuzata"
+        return "Expresie refuzata, nu se pot folosi litere sau alte caractere in " \
+               "afara operatorilor + - * /, paranteze si punct zecimal, fara functii."
 
+    # eval(expression, ...) = ruleaza textul ca pe o expresie Python
+    # __builtins__ = elimina functiile predefinite din Python (f important la nivel de securitate)
+    # {} la final inseamna ca nu exista variabile disponibile
     return str(eval(expression, {"__builtins__": {}}, {}))
 
 # BROWSER:
@@ -72,13 +78,16 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "read_file",
-            "description": "Citeste un fisier din folderul de lucru. Intoarce tot continutul fisierului, sub forma de string. Se foloseste cand trebuie sa extragem informatii din fisier.",
+            "description": "Citeste un fisier din folderul de lucru. Intoarce tot continutul "
+                           "fisierului, sub forma de string. Se foloseste cand trebuie sa extragem "
+                           "informatii din fisier.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": "String care se regaseste in rezultatul list_files. Exemplu: daca avem gigel.txt si numele dat e gigel.txt, nu altceva, e ok."
+                        "description": "String care se regaseste in rezultatul list_files. "
+                                       "Exemplu: daca avem gigel.txt si numele dat e gigel.txt, nu altceva, e ok."
                     }
                 },
                 "required": ["name"]
@@ -89,7 +98,9 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "list_files",
-            "description": "Listeaza numele fisierelor din folderul de lucru, fiecare pe o linie. Se foloseste cand nu stim numele exact al unui fisier sau cand vrem sa vedem continutul folderului de lucru.",
+            "description": "Listeaza numele fisierelor din folderul de lucru, fiecare pe o linie. "
+                           "Se foloseste cand nu stim numele exact al unui fisier sau cand vrem "
+                           "sa vedem continutul folderului de lucru.",
             "parameters": {
                 "type": "object",
                 "properties": {}
@@ -116,18 +127,20 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "calculator",
-            "description": "Calculeaza o expresie aritmetica.",
+            "description": "Calculeaza o expresie aritmetica si intoarce rezultatul. "
+                           "Accepta doar numere, operatorii + - * /, paranteze si punct zecimal, fara functii. "
+                           "Nu poate citi fisiere sau numara randuri.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "expression": {
                         "type": "string",
-                        "description": ""
+                        "description": "Expresia de calculat, de exemplu 10000+12000+9000 sau 2**3."
                     }
                 },
                 "required": ["expression"]
             },
-		}
+        }
     },
 ]
 
