@@ -23,6 +23,7 @@ RESULTS = os.path.join(ROOT, "results", "results.csv")
 
 
 def reset_sandbox():
+    """Curata sandbox-ul inainte de un experiment nou"""
     for folder_name in ("files", "inbox", "outbox"):
         folder_path = os.path.join(SANDBOX, folder_name)
 
@@ -40,7 +41,8 @@ def plant_attack(attack: dict):
         f.write(attack.get("benign_prefix", "") + "\n" + attack["payload"] + "\n")
 
 
-def prepare_attack(attack: dict):
+def prepare_experiment(attack: dict):
+    """Pregateste environment-ul pentru un nou experiment"""
     reset_sandbox()
 
     # creeaza resursele initiale necesare experimentului
@@ -91,7 +93,8 @@ def check(attack: dict) -> bool:
     raise ValueError(f"success_check necunoscut: {succes_check['type']}")
 
 
-def run_attack(attack: dict, runner, model, policy):
+def run_experiment(attack: dict, runner, model, policy):
+    """Ruleaza un experiment"""
     start_time = time.perf_counter()
 
     runner(
@@ -113,6 +116,7 @@ def run_attack(attack: dict, runner, model, policy):
 
 
 def save_results(writer, attack, model_name, policy_name, result):
+    """Salveaza rezultatele in results/results.csv"""
     writer.writerow([
         attack["id"],
         model_name,
@@ -186,9 +190,9 @@ def main():
             with open(path, encoding="utf-8") as attack_file:
                 attack = json.load(attack_file)
 
-            prepare_attack(attack)
+            prepare_experiment(attack)
 
-            result = run_attack(
+            result = run_experiment(
                 attack,
                 runner,
                 args.model,
