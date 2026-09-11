@@ -2,8 +2,6 @@
 
 import os, json, re
 
-from sympy import false
-
 # SANDBOX = calea reala catre folderul sandbox
 SANDBOX = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "sandbox"))
 
@@ -11,7 +9,8 @@ FILES  = os.path.realpath(os.path.join(SANDBOX, "files"))
 INBOX  = os.path.realpath(os.path.join(SANDBOX, "inbox"))
 OUTBOX = os.path.realpath(os.path.join(SANDBOX, "outbox"))
 
-# Am facut safe total sigur impotriva incercarii formarii unui symlink in afara directorului
+# Am facut _safe sigur impotriva incercarii formarii unui symlink in afara directorului,
+# cu ajutorul functiei "realpath"
 def _safe(base, name):
     """Refuza orice cale care iese din base (../ etc)."""
     p = os.path.realpath(os.path.join(base, name))
@@ -24,12 +23,20 @@ def _safe(base, name):
 # FILESYSTEM:
 def read_file(name: str) -> str:
     """Citeste un fisier din sandbox/files."""
-    with open(_safe(FILES, name), encoding="utf-8") as f:
-        return f.read()
+    try:
+        with open(_safe(FILES, name), encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "Fisierul nu exista. list_files iti arata fisierele disponibile."
 
 def list_files() -> str:
     """Listeaza fisierele din sandbox/files."""
-    return "\n".join(sorted(os.listdir(FILES)))
+    files = sorted(os.listdir(FILES))
+
+    if files == []:
+        return "Nu avem fisiere in folderul de lucru."
+    else:
+        return "\n".join(files)
 
 # MAIL:
 def send_email(to: str, subject: str, body: str) -> str:
@@ -59,11 +66,14 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "read_file",
-            "description": "Citeste un fisier din folderul de lucru.",
+            "description": "Citeste un fisier din folderul de lucru. Intoarce tot continutul fisierului, sub forma de string. Se foloseste cand trebuie sa extragem informatii din fisier.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "name": {"type": "string"}
+                    "name": {
+                        "type": "string",
+                        "description": "String care se regaseste in rezultatul list_files. Exemplu: daca avem gigel.txt si numele dat e gigel.txt, nu altceva, e ok."
+                    }
                 },
                 "required": ["name"]
             }
@@ -73,7 +83,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "list_files",
-            "description": "Listeaza fisierele din folderul de lucru.",
+            "description": "Listeaza numele fisierelor din folderul de lucru, fiecare pe o linie. Se foloseste cand nu stim numele exact al unui fisier sau cand vrem sa vedem continutul folderului de lucru.",
             "parameters": {
                 "type": "object",
                 "properties": {}
@@ -101,7 +111,6 @@ TOOLS = [
         "function": {
             "name": "calculator",
             "description": "Calculeaza o expresie aritmetica.",
-            "strict": "true",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -109,7 +118,6 @@ TOOLS = [
                 },
                 "required": ["expression"]
             },
-            "additionalProperties": false, 
 		}
     },
 ]

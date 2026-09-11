@@ -89,7 +89,20 @@ Un tool nu este luat in considerare daca:
 
 ## Unde ajuți LLM-ul să reușească
 
-1. **Descrierile din TOOLS.** Modelul alege unealta și argumentele doar după nume și descriere. O descriere bună spune ce face unealta, când s-o folosești și ce format au argumentele. Momentan parametrii n-au deloc `"description"`, de exemplu `name` de la `read_file` e doar `{"type": "string"}`.
+1. **Descrierile din TOOLS.** Modelul alege unealta și argumentele doar după nume și descriere. O descriere bună spune ce face unealta, când s-o folosești și ce format au argumentele. Momentan parametrii n-au deloc `"description"`, de exemplu `name` de la `read_file` e doar `{"type": "string"}`. ([**MAI MULTE AICI**](https://apxml.com/courses/prompt-engineering-agentic-workflows/chapter-3-prompt-engineering-tool-use/formatting-tool-specifications-llm))
+
+**Ce conține descrierea uneltei**
+	
+	1. Ce face, într-o propoziție.
+	2. Ce întoarce, adică ce fel de rezultat primește modelul înapoi.
+	3. Când se folosește. Dacă două unelte pot fi confundate, adaugi și când nu se folosește.
+
+**Ce conține descrierea unui parametru**
+	
+	1. Formatul concret: ce anume trebuie trimis, nu doar ce reprezintă.
+	2. De unde vine valoarea, dacă vine din altă unealtă, cum e „numele din rezultatul list_files".
+	3. Un exemplu corect, de genul raport.txt.
+	4. Limitele reale, dacă există și sunt impuse în cod, de exemplu operatorii permiși la calculator.
 
 2. **Mesajele de eroare.** Când o unealtă eșuează, textul returnat e singurul indiciu al modelului. `„eroare: [Errno 2] No such file"` îl lasă să ghicească. Un mesaj care îi spune ce să facă mai departe, de exemplu `„fișierul nu există, folosește list_files"`, îl readuce pe drumul bun.
 
@@ -111,4 +124,5 @@ Un tool nu este luat in considerare daca:
 >
 > *Nota: patch gasit in proportie de 60% de mine, 40% AI*
 
-### 2.
+### 2. Tratarea erorilor, redirectarea catre alt tool in caz de eroare
+> Nota: in general, mesajul erorilor trebuie sa fie cat mai mic, fiindca modelul nu face distinctia intre textul meu(sigur) si un potential prompt injection(periculos). El doar primeste text de la tool-uri.

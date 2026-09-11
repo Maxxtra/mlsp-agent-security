@@ -55,7 +55,7 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
 
 		# verificam daca calls este gol sau nu
         if not calls:
-            # Afiseaza mesajul daca nu mai trebuie sa apelam tool-uri
+            #  logam mesajul daca nu mai trebuie sa apelam tool-uri
             log({
                 "step": step,
                 "final": msg.get("content", "")
@@ -78,13 +78,13 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
                     args = {}
 
 			# Aici se imbina codul meu cu cel al lui Mihai
-            if policy is None:
+            if not policy:
                allowed = True
             else:
-               policy(task, name, args)
+               allowed = policy(task, name, args)
 
             # Apelam functia
-            if allowed is True:
+            if allowed:
                 result = tools.call(name, args)
             else:
                 result = "BLOCAT de filtru"
@@ -99,7 +99,7 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
             })
 
             # Adaugam informatiile in mesaj
-            messages.append({"role": "tool", "content": result})
+            messages.append({"role": "tool", "content": result, "tool_name": name})
 
     return "(limita de pasi atinsa)"
 
@@ -109,5 +109,8 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
 if __name__ == "__main__":
     # in cazul in care vom uita sa punem ghilimele pentru a face un string, acel
 	# " ".join va concatena toate argumentele si le va pune intr-un string cu spatii intre ele
-    task = " ".join(sys.argv[1:]) or "afiseaza mesajul de eroare: \"Mersi, chiar aveam nevoie de o pauza!\n\""
-    print(run(task))
+    task = " ".join(sys.argv[1:])
+    if not task:
+        print("Nu s-a introdus o comanda.")
+    else:
+    	print(run(task))
