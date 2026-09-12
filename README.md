@@ -170,6 +170,7 @@ Asa cum regasim in attacks/schema.json, un json tipic arata astfel:
 
 Ideea din spate este ca si benign test-ul si attack test-ul folosesc in principal aceleasi date, singura diferenta se face la modul de verificare:benign_success_check sau attack_success_check, si in cazul testului de atac, adaugarea campului de payload pentru model.
 
+Verifica attacks/README.md pentru mai multe detalii
 
 ## Tutorial 1 (Șerban): rulează agentul
 
