@@ -108,8 +108,6 @@ Când cineva adaugă o dependență în `environment.yml`, ceilalți își actua
 conda env update -f environment.yml --prune
 ```
 
-Cheile pentru modelele plătite (GPT, Claude) sunt pinned în canalul echipei; le folosești de luni.
-
 ### `sandbox_template/` vs `sandbox/`
 
 - `sandbox_template/` e **copia curată**, comisă în repo. Nu se modifică la rulare.
@@ -131,6 +129,7 @@ sandbox/		  copia sandbox_template, folosita pentru rularea harness-ului si core
 results/          CSV-uri cu rezultate, comise in repo
 logs/             trace.jsonl cu fiecare apel de unealta
 ```
+Cheile pentru modelele plătite (GPT, Claude) sunt pinned în canalul echipei; le folosești de luni.
 
 ## Tutorial 1 (Șerban): rulează agentul
 
