@@ -5,19 +5,28 @@
 
 # sys = pentru interpretor
 # os = pentru lucruri cu sistemul de operare
-import sys, json, time, os
+import sys, json, time, os, yaml
 import tools
 
+# ROOT = radacina proiectului (unde avem src/, config/, etc)
+# __file__ = calea de la root la fisierul nostru agent.py
+ROOT = os.path.realpath(os.path.join(os.path.dirname(__file__), ".."))
+
+# Setarile agentului, incarcate din config/agent.yaml
+CONFIG_PATH = os.path.join(ROOT, "config", "agent.yaml")
+with open(CONFIG_PATH, encoding="utf-8") as f:
+    CONFIG = yaml.safe_load(f)
+
 # LOG = calea catre fisierul in care vom scrie ce apeluri de tool-uri s-au facut
-# 		si ce rezultate avem (__file__ = calea de la root la fisierul nostru agent.py)
-LOG = os.path.join(os.path.dirname(__file__), "..", "logs", "trace.jsonl")
+# 		si ce rezultate avem
+LOG = os.path.join(ROOT, CONFIG["log_path"])
 
 # Rol SYSTEM: indicatiile pe care LLM-ul le urmeaza.
 # IMPORTANT: cu cat e mai mare SYSTEM-ul, cu atat costul si latency-ul cresc 
-SYSTEM = (
-    "Esti un asistent care rezolva sarcini folosind uneltele disponibile. "
-    "Foloseste uneltele cand ai nevoie, apoi da un raspuns final scurt."
-)
+SYSTEM_PATH = os.path.join(ROOT, CONFIG["system_prompt_path"])
+with open(SYSTEM_PATH, encoding="utf-8") as f:
+    # folosim strip() pentru a nu avea endline-uri intre cuvinte, sa simulam un text continuu
+    SYSTEM = f.read().strip()
 
 #TODO: LOG-ul proiectat cu mai multe informatii
 # functia care scrie in trace.jsonl fiecare apel de tool
@@ -29,7 +38,7 @@ def log(event: dict):
         # scrie, cu un timestamp, dictionarul de evenimente
         f.write(json.dumps({"t": time.time(), **event}, ensure_ascii=False) + "\n")
 
-def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> str:
+def run(task: str, model: str = CONFIG["model"], policy=None, max_steps: int = CONFIG["max_steps"]) -> str:
     """Bucla agentului. `policy(user_goal, tool_name, args) -> bool` e filtrul (Mihai)."""
     import ollama
 
@@ -113,7 +122,7 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
                 "tool": name,
                 "args": args,
                 "allowed": allowed,
-                "result": result[:500]
+                "result": result[:CONFIG["log_result_max_chars"]]
             })
 
             # Adaugam informatiile in mesaj

@@ -1,0 +1,19 @@
+# Fisier folosit in src/agent.py
+# Toate caile de aici sunt relative la RADACINA proiectului, 
+# nu la folderul din care rulez comanda.
+
+# Numele modelului.
+model: llama3.1
+# Cate treceri prin bucla are voie agentul inainte sa se opreasca.
+max_steps: 8
+
+# PROMPT
+# Daca vrem sa vedem cum se schimba modelul in functie de alte system prompturi
+# adaugam prompts/system_v2.md si schimbam doar calea de aici.
+system_prompt_path: prompts/system.md
+
+# LOG
+# Unde se scrie trace-ul. Fisier JSONL: un obiect JSON pe linie, adaugat la final.
+log_path: logs/trace.jsonl
+# Cate caractere din rezultatul unei unelte se pastreaza in log.
+log_result_max_chars: 500

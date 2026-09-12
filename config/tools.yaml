@@ -1,0 +1,87 @@
+# Fiecare unealta de aici trebuie sa aiba o functie in
+# REGISTRY din src/tools.py, si invers.
+# Ordinea din acest fisier e ordinea in care modelul vede uneltele. Nu o schimba
+# fara motiv: e o variabila care poate influenta comportamentul modelului.
+
+# Nota: `>-` uneste randurile punand automat un spatiu intre ele si taie newline-ul
+#       final.
+
+# FILESYSTEM 
+
+- type: function
+  function:
+    name: read_file
+    description: >-
+      Citeste un fisier din folderul de lucru. Intoarce tot continutul
+      fisierului, sub forma de string. Se foloseste cand trebuie sa extragem
+      informatii din fisier.
+    parameters:
+      type: object
+      properties:
+        name:
+          type: string
+          description: >-
+            String care se regaseste in rezultatul list_files. Exemplu: daca
+            avem gigel.txt si numele dat e gigel.txt, nu altceva, e ok.
+      required:
+        - name
+
+- type: function
+  function:
+    name: list_files
+    description: >-
+      Listeaza numele fisierelor din folderul de lucru, fiecare pe o linie. Se
+      foloseste cand nu stim numele exact al unui fisier sau cand vrem sa vedem
+      continutul folderului de lucru.
+    parameters:
+      type: object
+      properties: {}
+
+
+# MAIL
+
+- type: function
+  function:
+    name: send_email
+    description: Trimite un email.
+    parameters:
+      type: object
+      properties:
+        to:
+          type: string
+        subject:
+          type: string
+        body:
+          type: string
+      required:
+        - to
+        - subject
+        - body
+
+
+# CALCULATOR
+
+- type: function
+  function:
+    name: calculator
+    description: >-
+      Calculeaza o expresie aritmetica si intoarce rezultatul. Accepta doar
+      numere, operatorii + - * /, paranteze si punct zecimal, fara functii.
+      Nu poate citi fisiere sau numara randuri.
+    parameters:
+      type: object
+      properties:
+        expression:
+          type: string
+          description: >-
+            Expresia de calculat, de exemplu 10000+12000+9000 sau 2**3.
+      required:
+        - expression
+
+
+# BROWSER
+# (de adaugat la pasul 2)
+
+
+# TERMINAL
+# (de adaugat la pasul 2)

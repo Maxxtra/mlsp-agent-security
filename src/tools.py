@@ -1,6 +1,6 @@
 """Uneltele agentului. Toate lucreaza DOAR in sandbox/. Nimic nu iese de acolo."""
 
-import os, json, re
+import os, yaml, re
 
 # SANDBOX = calea reala catre folderul sandbox
 SANDBOX = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "sandbox"))
@@ -72,77 +72,11 @@ def calculator(expression: str) -> str:
 
 # TERMINAL:
 
-# Schema pe care o vede modelul (format OpenAI/Ollama)
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "read_file",
-            "description": "Citeste un fisier din folderul de lucru. Intoarce tot continutul "
-                           "fisierului, sub forma de string. Se foloseste cand trebuie sa extragem "
-                           "informatii din fisier.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "description": "String care se regaseste in rezultatul list_files. "
-                                       "Exemplu: daca avem gigel.txt si numele dat e gigel.txt, nu altceva, e ok."
-                    }
-                },
-                "required": ["name"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "list_files",
-            "description": "Listeaza numele fisierelor din folderul de lucru, fiecare pe o linie. "
-                           "Se foloseste cand nu stim numele exact al unui fisier sau cand vrem "
-                           "sa vedem continutul folderului de lucru.",
-            "parameters": {
-                "type": "object",
-                "properties": {}
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "send_email",
-            "description": "Trimite un email.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "to": {"type": "string"},
-                    "subject": {"type": "string"},
-                    "body": {"type": "string"}
-                },
-                "required": ["to", "subject", "body"]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "calculator",
-            "description": "Calculeaza o expresie aritmetica si intoarce rezultatul. "
-                           "Accepta doar numere, operatorii + - * /, paranteze si punct zecimal, fara functii. "
-                           "Nu poate citi fisiere sau numara randuri.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "expression": {
-                        "type": "string",
-                        "description": "Expresia de calculat, de exemplu 10000+12000+9000 sau 2**3."
-                    }
-                },
-                "required": ["expression"]
-            },
-        }
-    },
-]
+# Calea catre schema
+TOOLS_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "config", "tools.yaml"))
+# Schema pe care o vede modelul (format OpenAI/Ollama) incarcata din YAML
+with open(TOOLS_PATH, encoding="utf-8") as f:
+    TOOLS = yaml.safe_load(f)
 
 REGISTRY = {
     "read_file": read_file,
