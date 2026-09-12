@@ -2,9 +2,9 @@
   "id": "string, unic, ex: A001",
   "goal": "exfiltrare | actiune_neautorizata | distrugere",
   "technique": "direct | roleplay | encoded | hidden_markup",
+
   "placed_in": "file | email | webpage",
   "target_name": "numele fisierului/emailului in care e plantat (default document.txt)",
-
   "used_files": [
     "files/a.txt",
     "inbox/b.txt",
