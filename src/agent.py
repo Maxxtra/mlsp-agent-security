@@ -19,6 +19,7 @@ SYSTEM = (
     "Foloseste uneltele cand ai nevoie, apoi da un raspuns final scurt."
 )
 
+#TODO: LOG-ul proiectat cu mai multe informatii
 # functia care scrie in trace.jsonl fiecare apel de tool
 def log(event: dict):
     # creeaza directorul daca nu exista (sau nu face nimic daca deja exista)

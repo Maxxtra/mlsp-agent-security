@@ -16,18 +16,107 @@ Echipa: Șerban (agentul și uneltele), Robert (suita de atacuri), Mihai (apăra
 - [Robert](docs/plan-robert.md)
 - [Mihai](docs/plan-mihai.md)
 
-## Setup (10 minute)
+
+## Instalare conda (o singura data, per calculator)
+
+Recomandat: **Miniconda**, nu Anaconda completa. Instalerul e ~100 MB in loc de
+3+ GB de pachete de care proiectul nu are nevoie. `conda` si `environment.yml`
+functioneaza identic in ambele.
+
+Atentie la arhitectura: `x86_64` pentru PC-uri Intel/AMD, `arm64`/`aarch64`
+pentru Mac cu Apple Silicon (M1-M4) si pentru ARM.
+
+### Linux
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+bash ~/miniconda.sh
+```
 
-# model local, gratis, ca sa nu depinzi de nicio cheie
+### macOS
+
+```bash
+# Apple Silicon (M1-M4):
+curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o ~/miniconda.sh
+# Intel:
+curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -o ~/miniconda.sh
+
+bash ~/miniconda.sh
+```
+
+### Windows
+
+Descarci `Miniconda3-latest-Windows-x86_64.exe` de [aici](https://www.anaconda.com/docs/getting-started/miniconda/install) si il rulezi.
+
+In wizard: 
+
+1. Alege **"Just Me"** (nu are nevoie de drepturi de administrator) si
+**lasa calea implicita** (`C:\Users\<tu>\miniconda3`). 
+
+2. Spatiile in cale strica conda mai tarziu. Dupa instalare, folosesti terminalul "Anaconda Prompt" din meniul Start.
+
+### Dupa instalare
+
+Inchide si redeschide terminalul, apoi verifica:
+
+```bash
+conda --version
+```
+
+Optional, dar recomandat: opresti activarea automata a mediului `base` in fiecare
+terminal nou. Altfel Python-ul conda ajunge inaintea celui de sistem in PATH si
+poate incurca alte unelte.
+
+```bash
+conda config --set auto_activate_base false
+```
+
+### Igiena (ca sa nu ajungi la zeci de GB)
+
+Conda pastreaza in cache fiecare pachet descarcat vreodata si nu il curata singur.
+Din cand in cand:
+
+```bash
+conda clean --all          # goleste cache-ul de pachete
+conda env list             # ce medii ai create
+conda env remove -n <nume> # sterge unul vechi
+du -sh ~/(path_to_file)/miniconda3        # cat ocupa in total
+```
+
+## Setup (10 minute)
+
+Mediul e gestionat cu conda. Codul e in `environment.yml` — dacă adaugi
+o dependență, o adaugi acolo, nu doar în mediul tău local.
+
+```bash
+# 1. mediul Python (o singura data)
+conda env create -f environment.yml
+conda activate mlsp-agent
+
+# 2. modelul local, gratis, ca sa nu depinzi de nicio cheie
 # instaleaza Ollama de la https://ollama.com apoi:
 ollama pull llama3.1
+
+# 3. copia de lucru a sandbox-ului (vezi mai jos)
+cp -r sandbox_template sandbox
+
+# 4. inainte de fiecare sesiune de lucru
+conda activate mlsp-agent
+```
+Când cineva adaugă o dependență în `environment.yml`, ceilalți își actualizează mediul cu:
+```bash
+conda env update -f environment.yml --prune
 ```
 
 Cheile pentru modelele plătite (GPT, Claude) sunt pinned în canalul echipei; le folosești de luni.
+
+### `sandbox_template/` vs `sandbox/`
+
+- `sandbox_template/` e **copia curată**, comisă în repo. Nu se modifică la rulare.
+  Dacă vrei să adaugi un fișier pe care agentul să-l poată citi, îl pui aici.
+- `sandbox/` e **copia de lucru**, generată din template și ignorată de git.
+  `harness.py` o golește înainte de fiecare experiment, deci tot ce pui direct
+  acolo se pierde.
 
 ## Structura
 
@@ -36,7 +125,9 @@ src/agent.py      agentul: primeste o sarcina, alege o unealta, o apeleaza, cont
 src/tools.py      uneltele, toate in sandbox/                                         (Serban)
 src/harness.py    ruleaza atacuri prin agent si scrie results/results.csv             (Mihai)
 attacks/          un JSON per atac, dupa attacks/schema.json                          (Robert)
-sandbox/          tot ce "vede" agentul: files/, inbox/, outbox/. Nimic din afara.
+sandbox_template/ tot ce "vede" agentul: files/, inbox/, outbox/. Nimic din afara.
+sandbox/		  copia sandbox_template, folosita pentru rularea harness-ului si corectarea 	
+				  agentului	
 results/          CSV-uri cu rezultate, comise in repo
 logs/             trace.jsonl cu fiecare apel de unealta
 ```

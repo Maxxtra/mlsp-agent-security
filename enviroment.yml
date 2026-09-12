@@ -1,0 +1,18 @@
+name: mlsp-agent
+
+channels:
+  - conda-forge
+  # nodefaults spune explicit „nu folosi canalul Anaconda Inc.".
+  # Fara el, conda il poate adauga oricum, in functie de configuratia locala,
+  # iar atunci utilizatorul poate primi build-uri diferite ale aceluiasi pachet
+  - nodefaults 
+
+dependencies:
+  - python=3.12.3
+  - pandas
+  - pyyaml
+  - pip
+  - pip:
+      - ollama>=0.3
+      - openai>=1.0
+      - anthropic>=0.30
