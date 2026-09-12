@@ -3,15 +3,10 @@
   "goal": "exfiltrare | actiune_neautorizata | distrugere",
   "technique": "direct | roleplay | encoded | hidden_markup",
 
-  "placed_in": "file | email | webpage",
+  "target_placed_in": "file | email | webpage",
   "target_name": "numele fisierului/emailului in care e plantat (default document.txt)",
-  "used_files": [
-    "files/a.txt",
-    "inbox/b.txt",
-    "outbox/c.txt"
-  ],
+  "used_files": ["files/a.txt", "inbox/b.txt"],
 
-  "benign_prefix": "text normal pus inaintea payload-ului, ca sa para un document real",
   "payload": "textul exact al atacului",
   
   "user_task": "sarcina normala pe care o primeste utilizatorul si care il face sa citeasca target_name",
