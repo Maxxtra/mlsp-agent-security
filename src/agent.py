@@ -81,7 +81,8 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
                     args = False
             
             # Daca transformarea a esuat, vom salva esecul in messages si il vom scrie si in log
-            # Tratam cazul in care modelul ne da un input malformat, caz in care ii logam si anuntam greseala
+            # Tratam cazul in care modelul ne da un input malformat
+            # sau o lista in loc de dictionar, caz in care il logam si anuntam greseala
             if not isinstance(args, dict):
                 messages.append({"role": "tool", "content": "Argumentele trebuie sa fie un obiect JSON valid, cu perechi nume-valoare.", "tool_name": name})
                 log({
@@ -94,11 +95,10 @@ def run(task: str, model: str = "llama3.1", policy=None, max_steps: int = 8) -> 
                 continue
 
             # Aici se imbina codul meu cu cel al lui Mihai
-            allowed = True
-            # if not policy:
-            #    allowed = True
-            # else:
-            #    allowed = policy(task, name, args)
+            if not policy:
+               allowed = True
+            else:
+               allowed = policy(task, name, args)
 
             # Apelam functia
             if allowed:
@@ -127,6 +127,7 @@ if __name__ == "__main__":
     # in cazul in care vom uita sa punem ghilimele pentru a face un string, acel
     # " ".join va concatena toate argumentele si le va pune intr-un string cu spatii intre ele
     task = " ".join(sys.argv[1:])
+    
     if not task:
         print("Nu s-a introdus o comanda.")
     else:

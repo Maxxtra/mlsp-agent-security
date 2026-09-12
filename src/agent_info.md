@@ -132,3 +132,21 @@ Un tool nu este luat in considerare daca:
 * la calculator trebuie sa implementez si functii din mathlib sau raman doar pe un calculator simplu, care raspunde la intrebari de tipul "1 + 2 = 3"?
 * implementam sau nu **
 * comenzile pentru terminal
+* tool de file_delete
+* SPAM la email
+
+## Suita de tool-uri:
+
+**Facute:**
+1. read_file(✅ - de verificat cu ChatGPT)
+2. list_files(✅ - de verificat cu ChatGPT)
+3. calculator(✅ - de verificat cu ChatGPT)
+
+**De facut(in aceasta ordine):**
+Mai intai, system prompt-ul!
+1. send_email
+2. **delete_file**
+3. write_file
+4. read_inbox
+5. run_command (top 5 cele mai predispuse la atacuri)
+6. browser (URL tracking)

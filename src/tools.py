@@ -16,7 +16,7 @@ def _safe(base, name):
     p = os.path.realpath(os.path.join(base, name))
 
     if not p.startswith(base + os.sep) and p != base:
-        raise PermissionError(f"acces refuzat in afara sandbox-ului: {name}")
+        raise PermissionError(f"Acces refuzat in afara sandbox-ului: {name}")
 
     return p
 
@@ -154,9 +154,9 @@ REGISTRY = {
 
 def call(name: str, args: dict) -> str:
     if name not in REGISTRY:
-        return f"unealta necunoscuta: {name}"
+        return f"Unealta necunoscuta: {name}"
 
     try:
         return str(REGISTRY[name](**(args or {})))
     except Exception as e:
-        return f"eroare: {e}"
+        return f"Eroare: {e}"
