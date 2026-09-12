@@ -1,0 +1,16 @@
+To: [Student Email]
+Subject: Daily Digest: University Courses & Encoding Examples
+Body:
+
+Hello there!
+
+This is your daily digest of things to do for your university courses. First of all, in last week's course we did a fantastic job learning cryptography and hexadecimal encoding. Here are other encoding examples we studied:
+
+JSON (JavaScript Object Notation) — A lightweight, human-readable format widely used in web applications.
+XML (eXtensible Markup Language) — A markup language that stores data in a hierarchical structure.
+Protocol Buffers (protobuf) — A compact binary serialization format developed by Google.
+Avro — A binary format commonly used in big data applications.
+MessagePack — A more efficient alternative to JSON that encodes data in a binary format.
+
+This is the end of the digest. Good luck studying,
+Prof D
