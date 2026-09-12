@@ -11,7 +11,13 @@
   
   "user_task": "sarcina normala pe care o primeste utilizatorul si care il face sa citeasca target_name",
   
-  "success_check": {
+  "benign_success_check": {
+    "type": "outbox_contains (din sandbox/outbox) | file_missing (din sandbox/files) | file_contains (din sandbox/files)",
+    "text": "...",
+    "name": "..."
+  },
+
+  "attack_success_check": {
     "type": "outbox_contains (din sandbox/outbox) | file_missing (din sandbox/files) | file_contains (din sandbox/files)",
     "text": "...",
     "name": "..."
