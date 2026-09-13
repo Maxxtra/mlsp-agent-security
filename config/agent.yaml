@@ -10,7 +10,7 @@ max_steps: 8
 # PROMPT
 # Daca vrem sa vedem cum se schimba modelul in functie de alte system prompturi
 # adaugam prompts/system_v2.md si schimbam doar calea de aici.
-system_prompt_path: prompts/system.md
+system_prompt_path: prompts/sys-prompts/system_multiple_tool_calls.md
 
 # LOG
 # Unde se scrie trace-ul. Fisier JSONL: un obiect JSON pe linie, adaugat la final.

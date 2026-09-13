@@ -25,7 +25,7 @@ LOG = os.path.join(ROOT, CONFIG["log_path"])
 # IMPORTANT: cu cat e mai mare SYSTEM-ul, cu atat costul si latency-ul cresc 
 SYSTEM_PATH = os.path.join(ROOT, CONFIG["system_prompt_path"])
 with open(SYSTEM_PATH, encoding="utf-8") as f:
-    # folosim strip() pentru a nu avea endline-uri intre cuvinte, sa simulam un text continuu
+    # folosim strip() pentru a nu avea endline-uri intre la capat, sa simulam un text continuu
     SYSTEM = f.read().strip()
 
 #TODO: LOG-ul proiectat cu mai multe informatii

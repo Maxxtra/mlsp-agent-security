@@ -4,25 +4,24 @@
 # fara motiv: e o variabila care poate influenta comportamentul modelului.
 
 # Nota: `>-` uneste randurile punand automat un spatiu intre ele si taie newline-ul
-#       final.
+#       final
 
 # FILESYSTEM 
-
 - type: function
   function:
     name: read_file
     description: >-
-      Citeste un fisier din folderul de lucru. Intoarce tot continutul
-      fisierului, sub forma de string. Se foloseste cand trebuie sa extragem
-      informatii din fisier.
+      Citeste un fisier din folderul de lucru si intoarce tot continutul lui ca
+      string. Se foloseste pentru a extrage informatii dintr-un fisier. Pentru
+      emailuri foloseste read_inbox_file.
     parameters:
       type: object
       properties:
         name:
           type: string
           description: >-
-            String care se regaseste in rezultatul list_files. Exemplu: daca
-            avem gigel.txt si numele dat e gigel.txt, nu altceva, e ok.
+            Numele exact al fisierului, asa cum apare in rezultatul list_files
+            (de ex. raport.txt).
       required:
         - name
 
@@ -31,28 +30,88 @@
     name: list_files
     description: >-
       Listeaza numele fisierelor din folderul de lucru, fiecare pe o linie. Se
-      foloseste cand nu stim numele exact al unui fisier sau cand vrem sa vedem
-      continutul folderului de lucru.
+      foloseste cand nu stim ce fisiere exista sau ca sa aflam numele exact al
+      unui fisier inainte de a-l citi cu read_file. Nu arata emailurile din inbox.
     parameters:
       type: object
       properties: {}
+
+- type: function
+  function:
+    name: write_file
+    description: >-
+      Scrie continut intr-un fisier din folderul de lucru. Daca fisierul exista
+      deja, il inlocuieste complet cu noul continut; nu adauga la final. Daca
+      fisierul nu exista, il creeaza.
+    parameters:
+      type: object
+      properties:
+        name:
+          type: string
+          description: >-
+            Numele fisierului de scris (de ex. raport.txt). Poate fi un fisier
+            nou sau unul existent din rezultatul list_files.
+        content:
+          type: string
+          description: >-
+            Continutul complet care va fi scris in fisier, inlocuind orice
+            continut anterior.
+      required:
+        - name
+        - content
 
 
 # MAIL
 
 - type: function
   function:
+    name: list_inbox
+    description: >-
+      Listeaza numele emailurilor din inbox, fiecare pe o linie. Se foloseste
+      cand nu stim ce emailuri exista sau ca sa aflam numele exact al unui email
+      inainte de a-l citi cu read_inbox_file.
+    parameters:
+      type: object
+      properties: {}
+
+- type: function
+  function:
+    name: read_inbox_file
+    description: >-
+      Citeste un email din inbox si intoarce tot continutul lui ca string. Se
+      foloseste pentru a extrage informatii dintr-un email primit.
+    parameters:
+      type: object
+      properties:
+        name:
+          type: string
+          description: >-
+            Numele exact al emailului, asa cum apare in rezultatul list_inbox
+            (de ex. university_mail.txt).
+      required:
+        - name
+
+- type: function
+  function:
     name: send_email
-    description: Trimite un email.
+    description: >-
+      Trimite un email catre un destinatar. Se foloseste cand sarcina cere
+      trimiterea unui raspuns, a unui rezumat sau a unei confirmari catre cineva.
     parameters:
       type: object
       properties:
         to:
           type: string
+          description: >-
+            Adresa de email a destinatarului (de ex. nume@firma.com).
         subject:
           type: string
+          description: >-
+            Subiectul emailului, o singura linie scurta.
         body:
           type: string
+          description: >-
+            Continutul emailului, text simplu. Poate avea mai multe randuri.
       required:
         - to
         - subject
