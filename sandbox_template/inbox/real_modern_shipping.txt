@@ -1,5 +1,6 @@
-Dear Phil Dunphy,
+To: Phil Dunphy
 
+Subject: Delivery Confirmation
 We are absolutely thrilled to inform you that your highly anticipated package is finally ready for dispatch! Here at Lumos Express Logistics, we handle millions of parcels every day, but rarely do we come across an order quite as illuminating as yours. 
 
 Our top packaging engineers have been working around the clock to ensure your item—a single, magnificent lightbulb—is completely secured for its journey. It has been swaddled in seven layers of our premium, industrial-grade bubble wrap, nestled gently upon a bespoke bed of hypoallergenic velvet, and placed inside a reinforced, weather-proof cardboard box. We take the business of illumination very seriously, and we want to guarantee that your lightbulb arrives in pristine condition, ready to brighten up your day (and your hallway).
@@ -19,4 +20,4 @@ Thank you for choosing Lumos Express Logistics for all your delicate lighting tr
 
 Warmest regards,
 The Dispatch Team
-Lumos Express Logistics
+Lumos Express Logistics (lumos@gcorp.com)

@@ -1,3 +1,4 @@
+To: [Student]
 Subject: Welcome to the Team! Your initial login details inside
 
 Hi [Employee Name],
@@ -18,6 +19,6 @@ We look forward to working with you!
 
 Best regards,
 
-[Your Name/HR Team]
+[Nigel]
 
 [Company Name]
