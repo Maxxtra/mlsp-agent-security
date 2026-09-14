@@ -1,6 +1,6 @@
 To: [Student]
 Subject: Welcome to the Team! Your initial login details inside
-
+Body:
 Hi [Employee Name],
 
 Welcome aboard! We are thrilled to have you joining the team.

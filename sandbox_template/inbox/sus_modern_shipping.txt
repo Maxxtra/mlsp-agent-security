@@ -1,7 +1,7 @@
 To: Phil Dunphy
 
 Subject: Delivery came!
-
+Body:
 Hi there your delivery arrived! Check other mails for confirmation.
 
 Warmest regards,
