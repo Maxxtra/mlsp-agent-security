@@ -9,16 +9,34 @@ FILES  = os.path.realpath(os.path.join(SANDBOX, "files"))
 INBOX  = os.path.realpath(os.path.join(SANDBOX, "inbox"))
 OUTBOX = os.path.realpath(os.path.join(SANDBOX, "outbox"))
 
+INVALID_NAME = "Numele introdus nu este valid."
+
+# Dictionar luat pentru a pastra eficienta agentului in cazul in care ni se da un breach
+# in care atacatorul vrea sa iasa din sandbox. In loc sa se intoarca mesajul generic INVALID_NAME,
+# pe langa acesta ii recomandam agentului ce tool sa foloseasca pentru a vedea ce fisiere sunt
+# disponibile
+LIST_TOOL = {
+    "read_file": "list_files",
+    "delete_file": "list_files",
+    "read_inbox_file": "list_inbox",
+    "delete_email": "list_inbox",
+}
+
+class SandboxEscapeError(FileNotFoundError):
+    """Ridicata cand o cale iese din sandbox. Mostenita din FileNotFoundError
+        deoarece, daca uit s-o tratez undeva, sa cada pe ramura de fisier inexistent."""
+    pass
+
 # Functii interne comune
 
 # Am facut _safe sigur impotriva incercarii formarii unui symlink in afara directorului,
 # cu ajutorul functiei "realpath"
 def _safe(base: str, name: str):
-    """Refuza orice cale care iese din base (../ etc)."""
+    """Refuza orice cale care iese din base."""
     p = os.path.realpath(os.path.join(base, name))
 
     if not p.startswith(base + os.sep) and p != base:
-        raise PermissionError(f"Acces refuzat in afara sandbox-ului: {name}")
+        raise SandboxEscapeError(name)
 
     return p
 
@@ -32,7 +50,7 @@ def _list_dir(base: str, empty_msg: str) -> str:
         else:
             return "\n".join(nume)
     except FileNotFoundError:
-        return "Directorul nu exista."
+        return empty_msg
     except PermissionError:
         return "Nu ai permisiuni pentru a lista continutul acestui director."
 
@@ -50,7 +68,7 @@ def _read_from(base: str, name: str, list_tool_name: str) -> str:
         else :
             return f"Fisierul {name} exista, dar e gol."
     except FileNotFoundError:
-        return f"Nu exista nimic cu numele introdus. {list_tool_name} iti arata ce e disponibil."
+        return INVALID_NAME
     except IsADirectoryError:
         return f"Numele introdus nu este un fisier. {list_tool_name} iti arata ce e disponibil."
     except PermissionError:
@@ -60,7 +78,6 @@ def _read_from(base: str, name: str, list_tool_name: str) -> str:
 def _write_to(base: str, name: str, content: str) -> str:
     """Scrie/suprascrie un fisier obisnuit din `base`."""
     path = _safe(base, name)
-    
     # Memoram starea initiala
     already_exists = os.path.exists(path)
     
@@ -75,7 +92,9 @@ def _write_to(base: str, name: str, content: str) -> str:
     except PermissionError:
         return "Nu ai permisiune asupra acestui fisier."
     except IsADirectoryError:
-        return "Numele dat apartine unui director, nu al unui fisier."
+        return "Numele dat apartine unui director, nu unui fisier."
+    except FileNotFoundError:
+        return INVALID_NAME
 
     # Formam mesajul de raspuns, acum ca stim sigur ca scrierea a reusit
     if not already_exists:
@@ -88,7 +107,24 @@ def _write_to(base: str, name: str, content: str) -> str:
         if not content:
             return_msg += " Atentie. Fisierul suprascris este acum gol."
         return return_msg
-    
+
+# Functie ce scrie un email. Aici nu ne mai punem problema existentei altui email
+# cu EXACT acelasi Subject
+def _write_email(base: str, name: str, content: str) -> str:
+    """Trimite un email in `base`"""
+    path = _safe(base, name)
+
+    # Incercam scrierea
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+    except PermissionError:
+        return "Nu se poate trimite acest email. Nu ai permisiunile necesare."
+    except FileNotFoundError:
+        return "Emailul nu a putut fi trimis."
+
+    # Formam mesajul de raspuns, acum ca stim sigur ca scrierea a reusit
+    return f"Trimiterea emailului a avut succes."
 
 def _delete_from(base: str, name: str) -> str:
     """Sterge un fisier din `base`."""
@@ -98,7 +134,7 @@ def _delete_from(base: str, name: str) -> str:
         os.remove(path)
         return f"Fisierul {name} a fost sters cu succes."
     except FileNotFoundError:
-        return "Fisierul ce trebuia sters nu exista."
+        return INVALID_NAME
     except IsADirectoryError:
             return f"{name} nu este un fisier."
     except PermissionError:
@@ -133,12 +169,16 @@ def read_inbox_file(name: str) -> str:
 
 def send_email(to: str, subject: str, body: str) -> str:
     """'Trimite' un email: scrie un fisier in sandbox/outbox. Nu pleaca nimic real."""
-    fn = re.sub(r"[^a-zA-Z0-9_.@-]", "_", f"{to}__{subject}")[:80] + ".txt"
+    # formeaza numele de fisier user@example.com__subject
+    # re.sub = inlocuieste toate caracterele care nu sunt "a-zA-Z0-9_.@-" cu "_"
+    file_name = re.sub(r"[^a-zA-Z0-9_.@-]", "_", f"{to}__{subject}")[:80] + ".txt"
 
-    with open(_safe(OUTBOX, fn), "w", encoding="utf-8") as f:
-        f.write(f"TO: {to}\nSUBJECT: {subject}\n\n{body}")
+    return_msg = _write_email(OUTBOX, file_name, f"To: {to}\nSubject: {subject}\n\nBody:\n\n{body}")
 
-    return f"email pus in outbox: {fn}"
+    if not body:
+        return_msg += " Emailul nu are continut."
+
+    return return_msg
 
 def delete_email(name: str) -> str:
     """Sterge un email din sandbox/inbox."""
@@ -186,6 +226,13 @@ def call(name: str, args: dict) -> str:
         return f"Unealta necunoscuta: {name}"
 
     try:
-        return str(REGISTRY[name](**(args or {})))
+        result = str(REGISTRY[name](**(args or {})))
+    except SandboxEscapeError:
+        result = INVALID_NAME
     except Exception as e:
         return f"Eroare: {e}"
+
+    if result == INVALID_NAME and name in LIST_TOOL:
+        result += f" {LIST_TOOL[name]} iti arata ce e disponibil."
+
+    return result

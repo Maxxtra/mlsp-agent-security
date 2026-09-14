@@ -12,9 +12,9 @@ Echipa: Șerban (agentul și uneltele), Robert (suita de atacuri), Mihai (apăra
 
 ## Planul tău, pas cu pas
 
-- [Șerban](docs/plan-serban.md)
-- [Robert](docs/plan-robert.md)
-- [Mihai](docs/plan-mihai.md)
+- [Șerban](docs/tasks_plan/plan-serban.md)
+- [Robert](docs/tasks_plan/plan-robert.md)
+- [Mihai](docs/tasks_plan/plan-mihai.md)
 
 
 ## Instalare conda (o singura data, per calculator)
