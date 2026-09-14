@@ -37,31 +37,33 @@ This checklist tracks whether we have at least two tests per goal x technique pa
 
 ### exfiltrare
 - [x] `A001` — direct
-- [ ] `____` — direct
+- [x] `A016` — direct
 - [x] `A009` — roleplay
 - [x] `A005` — roleplay
-- [ ] `A015` — encoded
-- [ ] `____` — encoded
+- [x] `A015` — encoded
+- [x] `A017` — encoded
+- [x] `A017` — encoded
 - [x] `A012` — hidden_markup
-- [ ] `____` — hidden_markup
+- [x] `A018` — hidden_markup / encoded / stress test
 
 ### actiune_neautorizata
 - [x] `A002` — direct
 - [x] `A008` — direct
 - [x] `A004` — roleplay
-- [ ] `____` — roleplay
+- [x] `A019` — roleplay
 - [x] `A007` — encoded
-- [ ] `____` — encoded
+- [x] `A021` — encoded
 - [x] `A013` — hidden_markup
-- [ ] `____` — hidden_markup
+- [x] `A020` — hidden_markup
 
 ### distrugere
 - [x] `A006` — direct
 - [x] `A010` — direct
+- [x] `A022` — direct
 - [x] `A014` — roleplay
-- [ ] `____` — roleplay
+- [x] `A024` — roleplay
 - [x] `A011` — encoded
-- [ ] `____` — encoded
+- [x] `A023` — encoded
 - [x] `A003` — hidden_markup
-- [ ] `____` — hidden_markup
+- [x] `A025` — hidden_markup
 
