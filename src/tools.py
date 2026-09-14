@@ -1,6 +1,6 @@
 """Uneltele agentului. Toate lucreaza DOAR in sandbox/. Nimic nu iese de acolo."""
 
-import os, yaml, re
+import os, yaml, re, base64, shutil, subprocess
 
 # SANDBOX = calea reala catre folderul sandbox
 SANDBOX = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "sandbox"))
@@ -11,10 +11,6 @@ OUTBOX = os.path.realpath(os.path.join(SANDBOX, "outbox"))
 
 INVALID_NAME = "Numele introdus nu este valid."
 
-# Dictionar luat pentru a pastra eficienta agentului in cazul in care ni se da un breach
-# in care atacatorul vrea sa iasa din sandbox. In loc sa se intoarca mesajul generic INVALID_NAME,
-# pe langa acesta ii recomandam agentului ce tool sa foloseasca pentru a vedea ce fisiere sunt
-# disponibile
 LIST_TOOL = {
     "read_file": "list_files",
     "delete_file": "list_files",
@@ -32,7 +28,19 @@ class SandboxEscapeError(FileNotFoundError):
 # Am facut _safe sigur impotriva incercarii formarii unui symlink in afara directorului,
 # cu ajutorul functiei "realpath"
 def _safe(base: str, name: str):
-    """Refuza orice cale care iese din base."""
+    """Refuza orice cale care iese din base. Tolereaza prefixul files/ sau inbox/
+    scris de coechipieri in atacuri, daca se potriveste cu base-ul curent."""
+    # Coechipierii scriu caile ca "files/x.txt" sau "inbox/y.txt" in atacuri (contract
+    # de echipa). Taiem prefixul daca se potriveste cu base-ul curent, ca acele apeluri
+    # sa nu pice din formatare (Nu e o masura de securitate). Verificarea ../ de mai jos
+    # e cea care blocheaza evadarea.
+    # Aceasta schimbare doar tolereaza doua forme echivalente: 
+    # "raport.txt" si "files/raport.txt".
+    for prefix, folder in (("files/", FILES), ("inbox/", INBOX), ("outbox/", OUTBOX)):
+        if name.startswith(prefix) and base == folder:
+            name = name[len(prefix):]
+            break
+
     p = os.path.realpath(os.path.join(base, name))
 
     if not p.startswith(base + os.sep) and p != base:
@@ -184,6 +192,7 @@ def delete_email(name: str) -> str:
     """Sterge un email din sandbox/inbox."""
     return _delete_from(INBOX, name)
 
+
 # CALCULATOR:
 def calculator(expression: str) -> str:
     """Evalueaza o expresie aritmetica simpla."""
@@ -202,7 +211,94 @@ def calculator(expression: str) -> str:
 
 # TERMINAL:
 
-# Calea catre schema
+# Comenzi acceptate si sintaxa lor:
+# 
+# whoami (utilizatorul curent)
+# ps (procesele care ruleaza)
+# env (variabilele de mediu)
+# base64 <fisier> (continutul fisierului, encodat base64)
+# cp <sursa> <dest> (copiaza un fisier - 'dest' poate fi outbox/<nume>)
+# mv <sursa> <dest> (muta un fisier - 'dest' poate fi outbox/<nume>)
+
+_SHELL_COMENZI = {
+    "whoami": ["whoami"],
+    "ps": ["ps", "aux"],
+    "env": ["env"],
+}
+
+def _run_shell(argv: list) -> str:
+    try:
+        rezultat = subprocess.run(
+            argv, cwd=FILES, capture_output=True, text=True
+        )
+    except FileNotFoundError:
+        return "Comanda nu este disponibila."
+
+    iesire = rezultat.stdout + rezultat.stderr
+    if not iesire:
+        return "Comanda s-a executat, fara nimic de afisat."
+    return iesire
+
+
+def _base64_file(name: str) -> str:
+    path = _safe(FILES, name)
+    try:
+        with open(path, "rb") as f:
+            return base64.b64encode(f.read()).decode("ascii")
+    except IsADirectoryError:
+        return "Numele introdus nu este un fisier."
+    except PermissionError:
+        return "Nu ai permisiuni pentru a citi acest fisier."
+
+
+def _copy_or_move(sursa_name: str, dest_name: str, muta: bool) -> str:
+    sursa = _safe(FILES, sursa_name)
+    if dest_name.startswith("outbox/"):
+        destinatie = _safe(OUTBOX, dest_name[len("outbox/"):])
+    else:
+        destinatie = _safe(FILES, dest_name)
+
+    try:
+        if muta:
+            shutil.move(sursa, destinatie)
+            return f"Fisierul {sursa_name} a fost mutat in {dest_name}."
+        shutil.copy(sursa, destinatie)
+        return f"Fisierul {sursa_name} a fost copiat in {dest_name}."
+    except IsADirectoryError:
+        return "Numele introdus nu este un fisier."
+    except PermissionError:
+        return "Nu ai permisiuni pentru aceasta operatie."
+
+
+def run_command(command: str) -> str:
+    """Ruleaza una din comenzile permise. Vezi lista din _SHELL_COMENZI si base64/cp/mv."""
+    parti = command.split()
+    if not parti:
+        return "Comanda nu este permisa."
+
+    nume = parti[0]
+    argumente = parti[1:]
+
+    if nume in _SHELL_COMENZI:
+        if argumente:
+            return f"Comanda {nume} nu accepta argumente."
+        return _run_shell(_SHELL_COMENZI[nume])
+
+    if nume == "base64":
+        if len(argumente) != 1:
+            return "Foloseste: base64 <fisier>."
+        return _base64_file(argumente[0])
+
+    if nume in ("cp", "mv"):
+        if len(argumente) != 2:
+            return f"Foloseste: {nume} <sursa> <destinatie>."
+        return _copy_or_move(argumente[0], argumente[1], muta=(nume == "mv"))
+
+    return "Comanda nu este permisa."
+
+
+# Calea catre schema care descrie fiecare tool si ajuta LLM sa ia decizia
+# tool-ului pe care-l foloseste
 TOOLS_PATH = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "config", "tools.yaml"))
 # Schema pe care o vede modelul (format OpenAI/Ollama) incarcata din YAML
 with open(TOOLS_PATH, encoding="utf-8") as f:
@@ -217,7 +313,8 @@ REGISTRY = {
     "read_inbox_file": read_inbox_file,
     "send_email": send_email,
     "delete_email": delete_email,
-    "calculator": calculator
+    "calculator": calculator,
+    "run_command": run_command
 }
 
 

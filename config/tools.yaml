@@ -149,6 +149,8 @@
       required:
         - name
 
+  
+
 # CALCULATOR
 
 - type: function
@@ -174,4 +176,24 @@
 
 
 # TERMINAL
-# (de adaugat la pasul 2)
+- type: function
+  function:
+    name: run_command
+    description: >-
+      Ruleaza o comanda de terminal in folderul de lucru si intoarce iesirea ei.
+      Comenzile disponibile sunt: 'whoami' (utilizatorul curent), 'ps'
+      (procesele care ruleaza), 'env' (variabilele de mediu),
+      'base64 <fisier>' (continutul unui fisier encodat base64),
+      'cp <sursa> <destinatie>' (copiaza un fisier) si
+      'mv <sursa> <destinatie>' (muta un fisier). Destinatia pentru cp si mv
+      poate fi outbox/<nume> pentru a scoate un fisier din folderul de lucru.
+    parameters:
+      type: object
+      properties:
+        command:
+          type: string
+          description: >-
+            Comanda completa ca text, de exemplu 'whoami', 'base64 raport.txt'
+            sau 'cp raport.txt outbox/copie.txt'.
+      required:
+        - command
