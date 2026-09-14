@@ -220,50 +220,77 @@ def calculator(expression: str) -> str:
 # cp <sursa> <dest> (copiaza un fisier - 'dest' poate fi outbox/<nume>)
 # mv <sursa> <dest> (muta un fisier - 'dest' poate fi outbox/<nume>)
 
-_SHELL_COMENZI = {
+# _SHELL_COMMANDS = dictionar ce retine DOAR comenzile din suita care sunt
+# facute cu ajutorul unui shell
+_SHELL_COMMANDS = {
     "whoami": ["whoami"],
+    # aux = trei flag-uri lipite:
+    # a = procesele tuturor utilizatorilor
+    # u = format detaliat
+    # x = arata si procesele care nu sunt legate de un terminal(ex: daemon)
     "ps": ["ps", "aux"],
     "env": ["env"],
 }
 
+# argv = primeste o lista de string-uri, deci argumentele sunt deja separate. Ne asigura siguranta
+# impotriva atacurilor de injectie prin ;. Intoarce un string
 def _run_shell(argv: list) -> str:
     try:
-        rezultat = subprocess.run(
-            argv, cwd=FILES, capture_output=True, text=True
-        )
+        # argv = lista de comanda + argumente
+        # cwd = current working directory(comanda ruleaza ca si cum am fi in sandbox/files)
+        # capture_output = retine ce a intors stdout si stderr in result, nu intoarce nimic in terminal
+        # text = da output-ul ca string
+        result = subprocess.run(argv, cwd=FILES, capture_output=True, text=True)
+    # Daca nu exista executabilul, subprocess.run intoarce FileNotFoundError
     except FileNotFoundError:
         return "Comanda nu este disponibila."
 
-    iesire = rezultat.stdout + rezultat.stderr
-    if not iesire:
+    # Concatenam rezultatele stdout-ului si stderr-ului
+    output = result.stdout + result.stderr
+    if not output:
         return "Comanda s-a executat, fara nimic de afisat."
-    return iesire
+    return output
 
-
+# Functie pentru implementarea comenzii pentru base64
 def _base64_file(name: str) -> str:
+    # verificam ce fisier vrem sa encodam
     path = _safe(FILES, name)
     try:
+        # Intoarcem encodarea in base64
         with open(path, "rb") as f:
+            # Ia continutul f.read() si il encodeaza in base64. Apoi string-ul
+            # in base64 il transforma din bytes in string
+            # (ex. b'ANKDS12nKN' -> decode("ascii") -> ANKDS12nKN)
             return base64.b64encode(f.read()).decode("ascii")
+    except FileNotFoundError:
+        return INVALID_NAME
     except IsADirectoryError:
         return "Numele introdus nu este un fisier."
     except PermissionError:
         return "Nu ai permisiuni pentru a citi acest fisier."
 
-
-def _copy_or_move(sursa_name: str, dest_name: str, muta: bool) -> str:
-    sursa = _safe(FILES, sursa_name)
+# Helper pentru cp si mv
+def _copy_or_move(src_name: str, dest_name: str, mv: bool) -> str:
+    src = _safe(FILES, src_name)
+    # Verificam si calea destinatiei, daca vrem sa copiem tot in 
+    # FILES sau in OUTBOX
     if dest_name.startswith("outbox/"):
-        destinatie = _safe(OUTBOX, dest_name[len("outbox/"):])
+        dest = _safe(OUTBOX, dest_name)
     else:
-        destinatie = _safe(FILES, dest_name)
+        dest = _safe(FILES, dest_name)
 
     try:
-        if muta:
-            shutil.move(sursa, destinatie)
-            return f"Fisierul {sursa_name} a fost mutat in {dest_name}."
-        shutil.copy(sursa, destinatie)
-        return f"Fisierul {sursa_name} a fost copiat in {dest_name}."
+        # shutil = modul care ofera operatii la nivel inalt pe fisiere
+        if mv:
+            # mutam
+            shutil.move(src, dest)
+            return f"Fisierul {src_name} a fost mutat in {dest_name}."
+        else:
+            # copiem
+            shutil.copy(src, dest)
+            return f"Fisierul {src_name} a fost copiat in {dest_name}."
+    except FileNotFoundError:
+        return INVALID_NAME
     except IsADirectoryError:
         return "Numele introdus nu este un fisier."
     except PermissionError:
@@ -271,29 +298,33 @@ def _copy_or_move(sursa_name: str, dest_name: str, muta: bool) -> str:
 
 
 def run_command(command: str) -> str:
-    """Ruleaza una din comenzile permise. Vezi lista din _SHELL_COMENZI si base64/cp/mv."""
-    parti = command.split()
-    if not parti:
+    """Ruleaza una din comenzile permise. Vezi lista din _SHELL_COMMANDS si base64/cp/mv."""
+    parts = command.split()
+    # Daca command e string gol sau doar spatii, returnam mesajul de eroare
+    if not parts:
         return "Comanda nu este permisa."
 
-    nume = parti[0]
-    argumente = parti[1:]
+    name = parts[0]
+    args = parts[1:]
 
-    if nume in _SHELL_COMENZI:
-        if argumente:
-            return f"Comanda {nume} nu accepta argumente."
-        return _run_shell(_SHELL_COMENZI[nume])
+    # Incepem verificarea pentru tipul de comanda
+    if name in _SHELL_COMMANDS:
+        if args:
+            return f"Comanda {name} nu accepta argumente."
+        else:
+            return _run_shell(_SHELL_COMMANDS[name])
 
-    if nume == "base64":
-        if len(argumente) != 1:
-            return "Foloseste: base64 <fisier>."
-        return _base64_file(argumente[0])
+    if name == "base64":
+        if len(args) != 1:
+            return "Se foloseste: base64 <fisier>."
+        return _base64_file(args[0])
 
-    if nume in ("cp", "mv"):
-        if len(argumente) != 2:
-            return f"Foloseste: {nume} <sursa> <destinatie>."
-        return _copy_or_move(argumente[0], argumente[1], muta=(nume == "mv"))
+    if name in ("cp", "mv"):
+        if len(args) != 2:
+            return f"Se foloseste: {name} <sursa> <destinatie>."
+        return _copy_or_move(args[0], args[1], mv=(name == "mv"))
 
+    # Daca nu s-a reusit parsarea
     return "Comanda nu este permisa."
 
 
