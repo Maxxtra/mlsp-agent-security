@@ -1,10 +1,11 @@
 """Ruleaza experimentele din attacks/ prin agent si scrie rezultatele.
 
-Pentru moment ruleaza doar A001, pentru testarea pipeline-ului.
-
-Exemplu:
+Exemple:
     python src/harness.py --model llama3.1
     python src/harness.py --model llama3.1 --policy keyword
+
+    # Ruleaza scenariile fara plantarea atacurilor
+    python src/harness.py --model llama3.1 --benign
 """
 
 import argparse
@@ -27,7 +28,7 @@ ROOT = os.path.join(HERE, "..")
 ATTACKS = os.path.join(ROOT, "attacks")
 SANDBOX = os.path.join(ROOT, "sandbox")
 SANDBOX_TEMPLATE = os.path.join(ROOT, "sandbox_template")
-RESULTS = os.path.join(ROOT, "results", "results.csv")
+RESULTS_DIR = os.path.join(ROOT, "results")
 RUNS = os.path.join(ROOT, "runs")
 
 
@@ -382,32 +383,65 @@ def main():
         default=None
     )
 
+    parser.add_argument(
+        "--benign",
+        action="store_true",
+        help="Ruleaza toate scenariile fara plantarea payload-ului."
+    )
+
     args = parser.parse_args()
 
-    policy = load_policy(
-        args.policy
-    )
+    policy = load_policy(args.policy)
 
     model_name = args.model
     policy_name = args.policy or "none"
 
     # -------------------------------------------------------------
-    # Pregateste results/results.csv
+    # Stabilim tipul experimentului.
+    #
+    # Fara --benign:
+    #     attack
+    #
+    # Cu --benign:
+    #     benign
+    # -------------------------------------------------------------
+
+    if args.benign:
+        experiment_type = "benign"
+        attack_enabled = False
+    else:
+        experiment_type = "attack"
+        attack_enabled = True
+
+    # -------------------------------------------------------------
+    # Fiecare rulare primeste propriul fisier CSV.
+    #
+    # Exemple:
+    #   results/run_attack_20260914_120501.csv
+    #   results/run_benign_20260914_121023.csv
+    #
+    # results/results.csv ramane liber pentru rularea finala.
     # -------------------------------------------------------------
 
     os.makedirs(
-        os.path.dirname(RESULTS),
+        RESULTS_DIR,
         exist_ok=True
     )
 
-    new_results_file = (
-        not os.path.exists(RESULTS)
-        or os.path.getsize(RESULTS) == 0
+    timestamp = time.strftime(
+        "%Y%m%d_%H%M%S"
     )
 
+    results_path = os.path.join(
+        RESULTS_DIR,
+        f"run_{experiment_type}_{timestamp}.csv"
+    )
+
+    # Fiecare rulare are un fisier nou,
+    # deci il deschidem cu "w", nu cu "a".
     with open(
-        RESULTS,
-        "a",
+        results_path,
+        "w",
         newline="",
         encoding="utf-8"
     ) as results_file:
@@ -416,33 +450,35 @@ def main():
             results_file
         )
 
-        if new_results_file:
-            writer.writerow([
-                "attack_id",
-                "experiment_type",
-                "model",
-                "policy",
-                "success",
-                "latency_ms",
-                "cost_usd"
-            ])
+        writer.writerow([
+            "attack_id",
+            "experiment_type",
+            "model",
+            "policy",
+            "success",
+            "latency_ms",
+            "cost_usd"
+        ])
 
         # ---------------------------------------------------------
-        # MOMENTAN TESTAM DOAR A001.
-        #
-        # Mai tarziu vom inlocui asta cu toate fisierele JSON
-        # din attacks/.
+        # Gasim toate scenariile din attacks/.
+        # Ignoram schema.json.
         # ---------------------------------------------------------
 
-        attack_paths = [
+        attack_paths = sorted([
             os.path.join(
                 ATTACKS,
-                "A001.json"
+                filename
             )
-        ]
+            for filename in os.listdir(ATTACKS)
+            if (
+                filename.endswith(".json")
+                and filename != "schema.json"
+            )
+        ])
 
         # ---------------------------------------------------------
-        # Ruleaza fiecare attack JSON.
+        # Ruleaza fiecare scenariu.
         # ---------------------------------------------------------
 
         for path in attack_paths:
@@ -455,81 +491,100 @@ def main():
                     attack_file
                 )
 
-            # =====================================================
-            # BENIGN EXPERIMENT
-            # =====================================================
+            print(
+                f"\n=== "
+                f"{attack['id']} "
+                f"{experiment_type.upper()} "
+                f"==="
+            )
+
+            # -----------------------------------------------------
+            # Pregateste sandbox-ul.
+            #
+            # attack:
+            #     reset + used_files + payload
+            #
+            # benign:
+            #     reset + used_files
+            #     FARA payload
+            # -----------------------------------------------------
 
             prepare_experiment(
                 attack,
-                attack_enabled=False
+                attack_enabled=attack_enabled
             )
 
-            benign_run_directory = prepare_run_directory(
+            # -----------------------------------------------------
+            # Pregateste folderul runs/.
+            # -----------------------------------------------------
+
+            run_directory = prepare_run_directory(
                 attack["id"],
-                "benign"
+                experiment_type
             )
 
-            # Trace-ul trebuie sa contina DOAR rularea benign.
+            # Trace-ul trebuie sa contina doar experimentul curent.
             reset_agent_trace()
 
-            benign_result = run_experiment(
+            # -----------------------------------------------------
+            # Alegem success_check-ul potrivit.
+            #
+            # benign:
+            #     verificam benign_success_check
+            #
+            # attack:
+            #     verificam attack_success_check
+            # -----------------------------------------------------
+
+            if args.benign:
+                success_check = attack[
+                    "benign_success_check"
+                ]
+            else:
+                success_check = attack[
+                    "attack_success_check"
+                ]
+
+            # -----------------------------------------------------
+            # Ruleaza agentul.
+            # -----------------------------------------------------
+
+            result = run_experiment(
                 attack,
-                attack["benign_success_check"],
+                success_check,
                 args.model,
                 policy
             )
 
+            # -----------------------------------------------------
+            # Salveaza trace + raspuns final.
+            # -----------------------------------------------------
+
             save_run_artifacts(
-                benign_run_directory,
-                benign_result["response"]
+                run_directory,
+                result["response"]
             )
+
+            # -----------------------------------------------------
+            # Salveaza rezultatul in CSV.
+            # -----------------------------------------------------
 
             save_results(
                 writer,
                 attack,
-                "benign",
+                experiment_type,
                 model_name,
                 policy_name,
-                benign_result
+                result
             )
 
-            # =====================================================
-            # ATTACK EXPERIMENT
-            # =====================================================
+            # Scriem rezultatul imediat pe disk.
+            # Util daca o rulare ulterioara crapa.
+            results_file.flush()
 
-            prepare_experiment(
-                attack,
-                attack_enabled=True
-            )
-
-            attack_run_directory = prepare_run_directory(
-                attack["id"],
-                "attack"
-            )
-    
-            # Trace-ul trebuie sa contina DOAR rularea attack.
-            reset_agent_trace()
-
-            attack_result = run_experiment(
-                attack,
-                attack["attack_success_check"],
-                args.model,
-                policy
-            )
-
-            save_run_artifacts(
-                attack_run_directory,
-                attack_result["response"]
-            )
-
-            save_results(
-                writer,
-                attack,
-                "attack",
-                model_name,
-                policy_name,
-                attack_result
-            )
+    print(
+        f"\nResults saved to: {results_path}"
+    )
 
 
 if __name__ == "__main__":
