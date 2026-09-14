@@ -25,50 +25,84 @@ def _safe(base: str, name: str):
 # Afiseaza toate fisierele intr-un director, cu tot cu cele ascunse
 def _list_dir(base: str, empty_msg: str) -> str:
     """Listeaza numele din `base`. Nu filtram nimic: agentul vede exact ce e acolo."""
-    nume = sorted(os.listdir(base))
-
-    # Daca nu avem nimic in folder, returnam mesajul de eroare.
-    if not nume:
-        return empty_msg
-
-    return "\n".join(nume)
+    try:
+        nume = sorted(os.listdir(base))
+        if not nume:
+            return empty_msg
+        else:
+            return "\n".join(nume)
+    except FileNotFoundError:
+        return "Directorul nu exista."
+    except PermissionError:
+        return "Nu ai permisiuni pentru a lista continutul acestui director."
 
 # Citeste un fisier din baza "base", cu numele "name"
 def _read_from(base: str, name: str, list_tool_name: str) -> str:
-    """Citeste un fisier obisnuit din `base`. `list_tool_name` = unealta de listare, pt mesaje."""
+    """Citeste un fisier obisnuit din `base`."""
     path = _safe(base, name)
 
-    if not os.path.exists(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            file_text = f.read()
+
+        if file_text:
+            return file_text 
+        else :
+            return f"Fisierul {name} exista, dar e gol."
+    except FileNotFoundError:
         return f"Nu exista nimic cu numele introdus. {list_tool_name} iti arata ce e disponibil."
-    
-    if not os.path.isfile(path):
+    except IsADirectoryError:
         return f"Numele introdus nu este un fisier. {list_tool_name} iti arata ce e disponibil."
+    except PermissionError:
+        return "Nu ai permisiuni pentru a citi acest fisier."
 
-    with open(path, encoding="utf-8") as f:
-        return f.read()
-
-# Scrie/suprascrie un fisier. Intoarce comanda(suprascriere/stergere) pe care a facut-o
+# Functie ce scrie/suprascrie un fisier. Intoarce comanda(suprascriere/stergere) pe care a facut-o
 def _write_to(base: str, name: str, content: str) -> str:
     """Scrie/suprascrie un fisier obisnuit din `base`."""
     path = _safe(base, name)
+    
+    # Memoram starea initiala
+    already_exists = os.path.exists(path)
+    
+    # Daca exista, dar nu e fisier, oprim execuția.
+    if already_exists and not os.path.isfile(path):
+        return "Numele dat exista deja, dar nu este un fisier valid."
 
-    if not os.path.exists(path):
+    # Incercam scrierea
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(content)
+    except PermissionError:
+        return "Nu ai permisiune asupra acestui fisier."
+    except IsADirectoryError:
+        return "Numele dat apartine unui director, nu al unui fisier."
+
+    # Formam mesajul de raspuns, acum ca stim sigur ca scrierea a reusit
+    if not already_exists:
         if not content:
-            return_msg = f"Fisierul {name} creat este gol."
+            return f"Fisierul {name} creat este gol."
         else:
-            return_msg = f"Crearea si scrierea in {name} a continutului dat a avut succes."
+            return f"Crearea si scrierea in {name} a continutului dat a avut succes."
     else:
-        if os.path.isfile(path):
-            return_msg = f"Suprascrierea fisierului {name} cu continutul dat a avut succes."
-            if not content:
-                return_msg += " Atentie. Fisierul suprascris este acum gol."
-        else:
-            return "Numele dat nu este un fisier valabil."
+        return_msg = f"Suprascrierea fisierului {name} cu continutul dat a avut succes."
+        if not content:
+            return_msg += " Atentie. Fisierul suprascris este acum gol."
+        return return_msg
+    
 
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(content)
+def _delete_from(base: str, name: str) -> str:
+    """Sterge un fisier din `base`."""
+    path = _safe(base, name)
 
-    return return_msg
+    try:
+        os.remove(path)
+        return f"Fisierul {name} a fost sters cu succes."
+    except FileNotFoundError:
+        return "Fisierul ce trebuia sters nu exista."
+    except IsADirectoryError:
+            return f"{name} nu este un fisier."
+    except PermissionError:
+        return f"Nu ai permisiuni sa stergi acest fisier."
 
 # FILESYSTEM:
 def read_file(name: str) -> str:
@@ -79,10 +113,14 @@ def list_files() -> str:
     """Listeaza fisierele din sandbox/files."""
     return _list_dir(FILES, "Nu exista fisiere in folderul de lucru.")
 
-# Functie ce scrie/suprascrie in FILES un fisier
+# Tool ce scrie/suprascrie in FILES un fisier
 def write_file(name: str, content: str) -> str:
     return _write_to(FILES, name, content)
 
+# Tool ce sterge un fisier din FILES/INBOX
+def delete_file(name: str) -> str:
+    """Sterge un fisier din sandbox/files"""
+    return _delete_from(FILES, name)
 
 # MAIL:
 def list_inbox() -> str:
@@ -101,6 +139,10 @@ def send_email(to: str, subject: str, body: str) -> str:
         f.write(f"TO: {to}\nSUBJECT: {subject}\n\n{body}")
 
     return f"email pus in outbox: {fn}"
+
+def delete_email(name: str) -> str:
+    """Sterge un email din sandbox/inbox."""
+    return _delete_from(INBOX, name)
 
 # CALCULATOR:
 def calculator(expression: str) -> str:
@@ -130,9 +172,11 @@ REGISTRY = {
     "read_file": read_file,
     "list_files": list_files,
     "write_file": write_file,
-    "read_inbox_file": read_inbox_file,
+    "delete_file": delete_file,
     "list_inbox": list_inbox,
+    "read_inbox_file": read_inbox_file,
     "send_email": send_email,
+    "delete_email": delete_email,
     "calculator": calculator
 }
 

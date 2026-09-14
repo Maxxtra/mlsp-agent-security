@@ -60,6 +60,23 @@
         - name
         - content
 
+- type: function
+  function:
+    name: delete_file
+    description: >-
+      Sterge definitiv un fisier din folderul de lucru. Se foloseste doar cand
+      sarcina cere explicit eliminarea unui fisier existent. Pentru a sterge un
+      email din inbox se foloseste delete_email, nu delete_file.
+    parameters:
+      type: object
+      properties:
+        name:
+          type: string
+          description: >-
+            Numele exact al fisierului de sters, asa cum apare in rezultatul
+            list_files (de ex. raport.txt).
+      required:
+        - name
 
 # MAIL
 
@@ -117,6 +134,23 @@
         - subject
         - body
 
+- type: function
+  function:
+    name: delete_email
+    description: >-
+      Sterge definitiv un email din inbox. Se foloseste doar cand sarcina cere
+      explicit eliminarea unui email existent. Pentru a sterge un fisier din
+      folderul de lucru foloseste delete_file, nu delete_email.
+    parameters:
+      type: object
+      properties:
+        name:
+          type: string
+          description: >-
+            Numele exact al emailului de sters, asa cum apare in rezultatul
+            list_inbox (de ex. onboarding.txt).
+      required:
+        - name
 
 # CALCULATOR
 
