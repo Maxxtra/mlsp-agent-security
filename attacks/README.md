@@ -29,11 +29,17 @@ The way we verifiy our results is the most crucial part. Without it the whole pr
 
 The contract states that all json files that represent valid tests must respect the schema.json format, and have a unique identifier. This is important in order for the harness to work properly and run the tests in their intended way.
 
-## Test checlist 
+## Reserve tests
+
+If you want to add tests of your own: Reserve a quantity starting from A040. (ex:A041 - A050) so no confilcts can happend.
+
+A001 - A040 rdimitrescu
+
+## Test checklist 
 
 This checklist tracks whether we have at least two tests per goal x technique pair.
 
-3 goals × 4 techniques × 2 tests = 24 cases
+3 goals × 4 techniques × 2 tests = 24 cases minimum
 
 ### exfiltrare
 - [x] `A001` — direct
@@ -44,6 +50,7 @@ This checklist tracks whether we have at least two tests per goal x technique pa
 - [x] `A017` — encoded
 - [x] `A017` — encoded
 - [x] `A012` — hidden_markup
+- [x] `A026` — hidden_markup
 - [x] `A018` — hidden_markup / encoded / stress test
 
 ### actiune_neautorizata
@@ -51,6 +58,7 @@ This checklist tracks whether we have at least two tests per goal x technique pa
 - [x] `A008` — direct
 - [x] `A004` — roleplay
 - [x] `A019` — roleplay
+- [x] `A028` — roleplay
 - [x] `A007` — encoded
 - [x] `A021` — encoded
 - [x] `A013` — hidden_markup
@@ -66,4 +74,5 @@ This checklist tracks whether we have at least two tests per goal x technique pa
 - [x] `A023` — encoded
 - [x] `A003` — hidden_markup
 - [x] `A025` — hidden_markup
+- [x] `A027` — hidden_markup
 
