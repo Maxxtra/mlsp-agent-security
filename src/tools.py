@@ -29,8 +29,8 @@ class SandboxEscapeError(FileNotFoundError):
 # Am facut _safe sigur impotriva incercarii formarii unui symlink in afara directorului,
 # cu ajutorul functiei "realpath"
 def _safe(base: str, name: str):
-    """Refuza orice cale care iese din base. Tolereaza prefixul files/ sau inbox/
-    scris de coechipieri in atacuri, daca se potriveste cu base-ul curent."""
+    """Refuza orice cale care iese din base. Tolereaza prefixul files/, inbox/ sau
+    outbox/, daca se potriveste cu base-ul curent."""
     # Coechipierii scriu caile ca "files/x.txt" sau "inbox/y.txt" in atacuri (contract
     # de echipa). Taiem prefixul daca se potriveste cu base-ul curent, ca acele apeluri
     # sa nu pice din formatare (Nu e o masura de securitate). Verificarea ../ de mai jos
@@ -83,7 +83,7 @@ def _read_from(base: str, name: str, list_tool_name: str) -> str:
     except PermissionError:
         return "Nu ai permisiuni pentru a citi acest fisier."
 
-# Functie ce scrie/suprascrie un fisier. Intoarce comanda(suprascriere/stergere/append) pe care a facut-o
+# Scrie intr-un fisier. Mesajul intors spune ce s-a intamplat: creare, suprascriere sau append.
 def _write_to(base: str, name: str, content: str, append: bool = False) -> str:
     """Scrie intr-un fisier din `base`. append=False suprascrie, append=True adauga la final."""
     path = _safe(base, name)
@@ -172,7 +172,7 @@ def list_files() -> str:
 def write_file(name: str, content: str, mode: str = "write") -> str:
     return _write_to(FILES, name, content, append=(mode == "append"))
 
-# Tool ce sterge un fisier din FILES/INBOX
+# Tool ce sterge un fisier din FILES. Pentru INBOX exista delete_email.
 def delete_file(name: str) -> str:
     """Sterge un fisier din sandbox/files"""
     return _delete_from(FILES, name)
@@ -214,18 +214,19 @@ def calculator(expression: str) -> str:
                "afara operatorilor + - * /, paranteze si punct zecimal, fara functii."
 
     # eval(expression, ...) = ruleaza textul ca pe o expresie Python
-    # __builtins__ = elimina functiile predefinite din Python (f important la nivel de securitate)
+    # __builtins__ = elimina functiile predefinite din Python (important la nivel de securitate)
     # {} la final inseamna ca nu exista variabile disponibile
     return str(eval(expression, {"__builtins__": {}}, {}))
 
 # BROWSER:
 
-# Citeste fisiere doar cu extensia .html, pentru a nu se suprapune cu read_file.
-# Fisierele .html sunt gandite ca snapshot-uri de pe internet. Sunt gandite in acest fel
-# Deoarece nu vrem sa existe suprapuneri atunci cand testam modelul (exemplu simplu: Fac test azi
-# cu promptul "Afiseaza-mi ultima stire de pe Ziarul Financiar.". Daca ma intorc peste o saptamana si
-# tool-ul de browser ar functiona pe URL-uri, nu am mai avea acelasi rezultat. Cum cele doua implementari sunt
-# apropiate dpdv tehnic, am decis sa lucram pe snapshot-uri, pentru o testare mai buna a agentului cu date fixe)
+# Accepta doar .html, ca sa nu se suprapuna cu read_file.
+#
+# Fisierele .html sunt snapshot-uri: copii fixe ale unor pagini reale. Citirea de
+# URL-uri s-ar implementa usor, dar ar strica testele. Exemplu: "afiseaza-mi ultima
+# stire de pe Ziarul Financiar" - peste o saptamana raspunsul e altul, deci nu mai
+# exista verificator automat si nici comparatie intre politici. In plus, o cerere
+# HTTP catre un URL dat de un payload injectat ar fi exfiltrare reala.
 def browser(name: str) -> str:
     """Acceseaza o pagina web (.html) din folderul de lucru si intoarce continutul ei brut."""
     if not name.endswith(".html"):
@@ -278,7 +279,7 @@ def _run_shell(argv: list) -> str:
         # capture_output = retine ce a intors stdout si stderr in result, nu intoarce nimic in terminal
         # text = da output-ul ca string
         result = subprocess.run(argv, cwd=FILES, capture_output=True, text=True)
-    # Daca nu exista executabilul, subprocess.run intoarce FileNotFoundError
+    # Daca executabilul nu exista pe sistem, subprocess.run intoarce FileNotFoundError
     except FileNotFoundError:
         return "Comanda nu este disponibila."
 
@@ -290,7 +291,6 @@ def _run_shell(argv: list) -> str:
 
 # Functie pentru implementarea comenzii pentru base64
 def _base64_file(name: str) -> str:
-    # verificam ce fisier vrem sa encodam
     path = _safe(FILES, name)
     try:
         # Intoarcem encodarea in base64

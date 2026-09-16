@@ -25,11 +25,12 @@ LOG = os.path.join(ROOT, CONFIG["log_path"])
 # IMPORTANT: cu cat e mai mare SYSTEM-ul, cu atat costul si latency-ul cresc 
 SYSTEM_PATH = os.path.join(ROOT, CONFIG["system_prompt_path"])
 with open(SYSTEM_PATH, encoding="utf-8") as f:
-    # folosim strip() pentru a nu avea endline-uri intre la capat, sa simulam un text continuu
+    # strip() taie liniile goale de la capete, ca promptul sa fie un text continuu
     SYSTEM = f.read().strip()
 
-#TODO: LOG-ul proiectat cu mai multe informatii
-# functia care scrie in trace.jsonl fiecare apel de tool
+# TODO: de rescris dupa docs/trace-format.md (run_id, event, model_call cu tokeni,
+# run_end cu reason). Fara ele nu se pot calcula cost_usd si latency-ul.
+# Functia care scrie in trace.jsonl.
 def log(event: dict):
     # creeaza directorul daca nu exista (sau nu face nimic daca deja exista)
     os.makedirs(os.path.dirname(LOG), exist_ok=True)
@@ -39,7 +40,7 @@ def log(event: dict):
         f.write(json.dumps({"t": time.time(), **event}, ensure_ascii=False) + "\n")
 
 def run(task: str, model: str = CONFIG["model"], policy=None, max_steps: int = CONFIG["max_steps"]) -> str:
-    """Bucla agentului. `policy(user_goal, tool_name, args) -> bool` e filtrul (Mihai)."""
+    """Bucla agentului. `policy(task, name, args) -> bool` e filtrul (Mihai)."""
     import ollama
 
     # messages = lista de dictionare Python, care reprezinta conversatia
@@ -75,8 +76,8 @@ def run(task: str, model: str = CONFIG["model"], policy=None, max_steps: int = C
         for c in calls:
             # name = numele tool-ului
             # args = ce argumente trebuie folosite
-            # args_original = retine args sub forma avuta la inceput, pentru a trata cazul
-            #                 in care transformarea in format JSON esueaza si sa scriem in log si in messages eroarea
+            # args_original = forma primita de la model, pastrata ca sa putem loga
+            #                  exact ce a trimis daca parsarea JSON esueaza
             name = c["function"]["name"]
             args = c["function"].get("arguments") or {}
             args_original = args
@@ -90,9 +91,9 @@ def run(task: str, model: str = CONFIG["model"], policy=None, max_steps: int = C
                 except json.JSONDecodeError:
                     args = False
             
-            # Daca transformarea a esuat, vom salva esecul in messages si il vom scrie si in log
-            # Tratam cazul in care modelul ne da un input malformat
-            # sau o lista in loc de dictionar, caz in care il logam si anuntam greseala
+            # Modelul a dat argumente malformate (JSON invalid, sau o lista in loc
+            # de dictionar). Anuntam greseala in messages, ca sa se poata corecta
+            # la pasul urmator, si o scriem si in log.
             if not isinstance(args, dict):
                 messages.append({"role": "tool", "content": "Argumentele trebuie sa fie un obiect JSON valid, cu perechi nume-valoare.", "tool_name": name})
                 log({
@@ -110,7 +111,7 @@ def run(task: str, model: str = CONFIG["model"], policy=None, max_steps: int = C
             else:
                allowed = policy(task, name, args)
 
-            # Apelam functia
+            # Apelam unealta doar daca filtrul a permis-o
             if allowed:
                 result = tools.call(name, args)
             else:
