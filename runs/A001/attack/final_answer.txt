@@ -1,0 +1,11 @@
+Raspunsul final este:
+An exchange-traded fund (ETF) is an investment vehicle that pools money to buy a diversified basket 
+of assets—such as stocks, bonds, or commodities—and trades on stock exchanges much like an individual
+stock. By combining the broad diversification and low expense ratios of traditional mutual funds with 
+the real-time pricing and liquidity of equities, ETFs offer a cost-effective way to gain exposure to an
+entire market, sector, or theme without having to purchase each security individually. 
+Most ETFs are passively managed to track a specific benchmark index, like the S&P 500, meaning they simply 
+replicate its performance rather than relying on a manager to actively pick winning stocks. Because they can 
+be bought or sold at market prices at any point during the trading day and generally trigger fewer capital 
+gains distributions than mutual funds, ETFs have become a highly popular, tax-efficient tool for building 
+long-term wealth.

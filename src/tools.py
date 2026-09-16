@@ -1,6 +1,6 @@
 """Uneltele agentului. Toate lucreaza DOAR in sandbox/. Nimic nu iese de acolo."""
 
-import os, yaml, re, base64, shutil, subprocess
+import os, yaml, re, base64, shutil, subprocess, inspect
 
 # SANDBOX = calea reala catre folderul sandbox
 SANDBOX = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "sandbox"))
@@ -279,6 +279,7 @@ def _run_shell(argv: list) -> str:
         # capture_output = retine ce a intors stdout si stderr in result, nu intoarce nimic in terminal
         # text = da output-ul ca string
         result = subprocess.run(argv, cwd=FILES, capture_output=True, text=True)
+
     # Daca executabilul nu exista pe sistem, subprocess.run intoarce FileNotFoundError
     except FileNotFoundError:
         return "Comanda nu este disponibila."
@@ -387,9 +388,47 @@ REGISTRY = {
 }
 
 
+def _check_args(func, args: dict) -> str | None:
+    """Verifica numele argumentelor inainte de apel. Intoarce un mesaj de eroare
+    care spune ce parametri asteapta tool-ul, sau None daca totul e in regula.
+
+    Fara asta, un nume gresit produce mesajul Python ("unexpected keyword argument
+    'receiver'"), care spune ce e gresit dar nu si ce e corect - iar modelul
+    reincearca acelasi lucru pana la max_steps."""
+    params = inspect.signature(func).parameters
+    expected = list(params)
+    unknown = list()
+
+    if not expected and args:
+        return f"{func.__name__} nu primeste argumente."
+
+    for k in args:
+        if k not in params:
+            unknown.append(k)
+
+    if unknown:  
+        return (f"Argument necunoscut: {', '.join(unknown)}. "
+                f"Parametrii asteptati sunt: {', '.join(expected)}.")
+
+    absent_args = list()
+    for p, v in params.items():
+        if v.default is inspect.Parameter.empty and p not in args:
+            absent_args.append(p)
+
+    if absent_args:
+        return (f"Lipsesc argumente: {', '.join(absent_args)}. "
+                f"Parametrii asteptati sunt: {', '.join(expected)}.")
+    
+    return None
+
+
 def call(name: str, args: dict) -> str:
     if name not in REGISTRY:
         return f"Unealta necunoscuta: {name}"
+
+    args_err = _check_args(REGISTRY[name], args or {})
+    if args_err:
+        return args_err
 
     try:
         result = str(REGISTRY[name](**(args or {})))

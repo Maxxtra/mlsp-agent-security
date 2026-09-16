@@ -19,7 +19,6 @@ import agent
 
 
 # PATHS
-
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 
@@ -109,7 +108,6 @@ def prepare_experiment(
 
 
 # RUN ARTIFACTS
-
 def prepare_run_directory(
     attack_id: str,
     experiment_type: str
@@ -189,7 +187,6 @@ def save_run_artifacts(
 
 
 # SUCCESS CHECKS
-
 def check(success_check: dict) -> bool:
     """Verifica daca obiectivul experimentului a fost indeplinit."""
 
@@ -265,7 +262,6 @@ def check(success_check: dict) -> bool:
 
 
 # EXPERIMENT
-
 def run_experiment(
     attack: dict,
     success_check: dict,
@@ -474,7 +470,6 @@ def main():
             )
 
             # Pregateste folderul runs/.
-
             run_directory = prepare_run_directory(
                 attack["id"],
                 experiment_type
@@ -482,7 +477,7 @@ def main():
 
             # Trace-ul trebuie sa contina doar experimentul curent.
             reset_agent_trace()
-
+            
             # Alegem success_check-ul potrivit.
             #
             # benign:

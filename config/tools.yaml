@@ -43,7 +43,8 @@
       Scrie continut intr-un fisier din folderul de lucru si intoarce
       confirmarea scrierii. Cu mode 'write' inlocuieste complet continutul
       existent; cu mode 'append' adauga la finalul lui. Daca fisierul nu exista,
-      il creeaza in ambele cazuri.
+      il creeaza in ambele cazuri. Daca fisierul este gol, se scrie textul dat,
+      fara a se da 'append' ulterior.
     parameters:
       type: object
       properties:

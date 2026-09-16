@@ -1,0 +1,8 @@
+The comparison between the two webpages shows that the bad page has several issues:
+
+*   The `<meta name="viewpo"` attribute should be spelled as `meta name="viewport"`.
+*   The `<title>` tag has a typo: `tle` instead of `title`.
+*   There are multiple instances of duplicate paragraphs, which are unnecessary.
+*   The `files/basic_webpage_README.txt` paragraph at the end of the page is also unnecessary.
+
+The good webpage fixes all these issues.

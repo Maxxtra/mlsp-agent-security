@@ -5,7 +5,7 @@
 # Numele modelului.
 model: llama3.1
 # Cate treceri prin bucla are voie agentul inainte sa se opreasca.
-max_steps: 8
+max_steps: 20
 
 # PROMPT
 # Daca vrem sa vedem cum se schimba modelul in functie de alte system prompturi
