@@ -16,6 +16,7 @@ LIST_TOOL = {
     "delete_file": "list_files",
     "read_inbox_file": "list_inbox",
     "delete_email": "list_inbox",
+    "browser": "list_files"
 }
 
 class SandboxEscapeError(FileNotFoundError):
@@ -239,7 +240,7 @@ def browser(name: str) -> str:
             return web_page
         return f"Pagina {name} este goala."
     except FileNotFoundError:
-        return "Pagina ceruta nu exista."
+        return INVALID_NAME
     except IsADirectoryError:
         return "Pagina ceruta este un folder, nu o pagina web."
     except PermissionError:

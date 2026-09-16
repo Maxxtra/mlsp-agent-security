@@ -18,9 +18,7 @@ import time
 import agent
 
 
-# ---------------------------------------------------------------------
 # PATHS
-# ---------------------------------------------------------------------
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
@@ -32,10 +30,7 @@ RESULTS_DIR = os.path.join(ROOT, "results")
 RUNS = os.path.join(ROOT, "runs")
 
 
-# ---------------------------------------------------------------------
 # SANDBOX
-# ---------------------------------------------------------------------
-
 def reset_sandbox():
     """Recreeaza sandbox-ul gol pentru un experiment nou."""
 
@@ -113,9 +108,7 @@ def prepare_experiment(
         plant_attack(attack)
 
 
-# ---------------------------------------------------------------------
 # RUN ARTIFACTS
-# ---------------------------------------------------------------------
 
 def prepare_run_directory(
     attack_id: str,
@@ -195,19 +188,14 @@ def save_run_artifacts(
         )
 
 
-# ---------------------------------------------------------------------
 # SUCCESS CHECKS
-# ---------------------------------------------------------------------
 
 def check(success_check: dict) -> bool:
     """Verifica daca obiectivul experimentului a fost indeplinit."""
 
     check_type = success_check["type"]
 
-    # -------------------------------------------------------------
     # Verifica daca un email trimis contine textul cerut.
-    # -------------------------------------------------------------
-
     if check_type == "outbox_contains":
         outbox_path = os.path.join(
             SANDBOX,
@@ -239,10 +227,7 @@ def check(success_check: dict) -> bool:
 
         return False
 
-    # -------------------------------------------------------------
     # Verifica daca un fisier nu mai exista.
-    # -------------------------------------------------------------
-
     if check_type == "file_missing":
         file_path = os.path.join(
             SANDBOX,
@@ -251,10 +236,7 @@ def check(success_check: dict) -> bool:
 
         return not os.path.exists(file_path)
 
-    # -------------------------------------------------------------
     # Verifica daca un fisier contine textul cerut.
-    # -------------------------------------------------------------
-
     if check_type == "file_contains":
         file_path = os.path.join(
             SANDBOX,
@@ -282,9 +264,7 @@ def check(success_check: dict) -> bool:
     )
 
 
-# ---------------------------------------------------------------------
 # EXPERIMENT
-# ---------------------------------------------------------------------
 
 def run_experiment(
     attack: dict,
@@ -316,10 +296,7 @@ def run_experiment(
     }
 
 
-# ---------------------------------------------------------------------
 # RESULTS CSV
-# ---------------------------------------------------------------------
-
 def save_results(
     writer,
     attack,
@@ -348,10 +325,7 @@ def save_results(
     )
 
 
-# ---------------------------------------------------------------------
 # POLICY
-# ---------------------------------------------------------------------
-
 def load_policy(name):
     """Incarca functia de policy din policies.py."""
 
@@ -366,10 +340,7 @@ def load_policy(name):
     )
 
 
-# ---------------------------------------------------------------------
 # MAIN
-# ---------------------------------------------------------------------
-
 def main():
     parser = argparse.ArgumentParser()
 
@@ -396,7 +367,6 @@ def main():
     model_name = args.model
     policy_name = args.policy or "none"
 
-    # -------------------------------------------------------------
     # Stabilim tipul experimentului.
     #
     # Fara --benign:
@@ -404,7 +374,6 @@ def main():
     #
     # Cu --benign:
     #     benign
-    # -------------------------------------------------------------
 
     if args.benign:
         experiment_type = "benign"
@@ -413,7 +382,6 @@ def main():
         experiment_type = "attack"
         attack_enabled = True
 
-    # -------------------------------------------------------------
     # Fiecare rulare primeste propriul fisier CSV.
     #
     # Exemple:
@@ -421,7 +389,6 @@ def main():
     #   results/run_benign_20260914_121023.csv
     #
     # results/results.csv ramane liber pentru rularea finala.
-    # -------------------------------------------------------------
 
     os.makedirs(
         RESULTS_DIR,
@@ -460,11 +427,8 @@ def main():
             "cost_usd"
         ])
 
-        # ---------------------------------------------------------
         # Gasim toate scenariile din attacks/.
         # Ignoram schema.json.
-        # ---------------------------------------------------------
-
         attack_paths = sorted([
             os.path.join(
                 ATTACKS,
@@ -477,10 +441,7 @@ def main():
             )
         ])
 
-        # ---------------------------------------------------------
         # Ruleaza fiecare scenariu.
-        # ---------------------------------------------------------
-
         for path in attack_paths:
 
             with open(
@@ -498,7 +459,6 @@ def main():
                 f"==="
             )
 
-            # -----------------------------------------------------
             # Pregateste sandbox-ul.
             #
             # attack:
@@ -507,16 +467,13 @@ def main():
             # benign:
             #     reset + used_files
             #     FARA payload
-            # -----------------------------------------------------
 
             prepare_experiment(
                 attack,
                 attack_enabled=attack_enabled
             )
 
-            # -----------------------------------------------------
             # Pregateste folderul runs/.
-            # -----------------------------------------------------
 
             run_directory = prepare_run_directory(
                 attack["id"],
@@ -526,7 +483,6 @@ def main():
             # Trace-ul trebuie sa contina doar experimentul curent.
             reset_agent_trace()
 
-            # -----------------------------------------------------
             # Alegem success_check-ul potrivit.
             #
             # benign:
@@ -534,7 +490,6 @@ def main():
             #
             # attack:
             #     verificam attack_success_check
-            # -----------------------------------------------------
 
             if args.benign:
                 success_check = attack[
@@ -545,10 +500,7 @@ def main():
                     "attack_success_check"
                 ]
 
-            # -----------------------------------------------------
             # Ruleaza agentul.
-            # -----------------------------------------------------
-
             result = run_experiment(
                 attack,
                 success_check,
@@ -556,19 +508,13 @@ def main():
                 policy
             )
 
-            # -----------------------------------------------------
             # Salveaza trace + raspuns final.
-            # -----------------------------------------------------
-
             save_run_artifacts(
                 run_directory,
                 result["response"]
             )
 
-            # -----------------------------------------------------
             # Salveaza rezultatul in CSV.
-            # -----------------------------------------------------
-
             save_results(
                 writer,
                 attack,
