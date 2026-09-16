@@ -40,9 +40,10 @@
   function:
     name: write_file
     description: >-
-      Scrie continut intr-un fisier din folderul de lucru. Daca fisierul exista
-      deja, il inlocuieste complet cu noul continut; nu adauga la final. Daca
-      fisierul nu exista, il creeaza.
+      Scrie continut intr-un fisier din folderul de lucru si intoarce
+      confirmarea scrierii. Cu mode 'write' inlocuieste complet continutul
+      existent; cu mode 'append' adauga la finalul lui. Daca fisierul nu exista,
+      il creeaza in ambele cazuri.
     parameters:
       type: object
       properties:
@@ -54,8 +55,14 @@
         content:
           type: string
           description: >-
-            Continutul complet care va fi scris in fisier, inlocuind orice
-            continut anterior.
+            Continutul de scris in fisier.
+        mode:
+          type: string
+          enum: [write, append]
+          description: >-
+            'write' inlocuieste tot continutul fisierului cu cel dat. 'append'
+            pastreaza continutul existent si adauga la finalul lui. Implicit
+            'write'.
       required:
         - name
         - content
@@ -172,7 +179,24 @@
 
 
 # BROWSER
-# (de adaugat la pasul 2)
+- type: function
+  function:
+    name: browser
+    description: >-
+      Acceseaza o pagina web din folderul de lucru si intoarce continutul ei
+      complet, cu tot codul HTML. Se foloseste cand sarcina cere vizitarea,
+      deschiderea sau analizarea unui site, a unei pagini web sau a unui webpage.
+      Pentru fisiere care nu sunt pagini web se foloseste read_file.
+    parameters:
+      type: object
+      properties:
+        name:
+          type: string
+          description: >-
+            Numele paginii, terminat in .html, asa cum apare in rezultatul
+            list_files (de ex. basic_webpage_good.html).
+      required:
+        - name
 
 
 # TERMINAL

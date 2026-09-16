@@ -650,8 +650,6 @@ doar cand `base` corespunde.
 
 - **Fisiere ascunse la `read_file`** - il lasam sa le citeasca? Argumente de
   ambele parti.
-- **Directoare inexistente** - `write_file("nustiu/x.txt")` - tratam cazul, si
-  cum?
 
 ### Pentru Mihai
 
@@ -695,6 +693,3 @@ doar cand `base` corespunde.
   rezultat publicabil despre fragilitatea allowlist-urilor de unelte. Zero
   suprapunere e mai curat si mai usor de aparat - dar o singura suprapunere
   deliberata ar da un experiment in plus.
-- **`calculator` si `9**9**9`.** Regexul permite `**`, deci o expresie de forma
-  asta ingheata agentul. Singurul blocaj infinit ramas in cod. Fix posibil: garda
-  pe marimea exponentului (ast-based) sau limita de timp.

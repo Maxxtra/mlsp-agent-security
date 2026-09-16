@@ -82,20 +82,25 @@ def _read_from(base: str, name: str, list_tool_name: str) -> str:
     except PermissionError:
         return "Nu ai permisiuni pentru a citi acest fisier."
 
-# Functie ce scrie/suprascrie un fisier. Intoarce comanda(suprascriere/stergere) pe care a facut-o
-def _write_to(base: str, name: str, content: str) -> str:
-    """Scrie/suprascrie un fisier obisnuit din `base`."""
+# Functie ce scrie/suprascrie un fisier. Intoarce comanda(suprascriere/stergere/append) pe care a facut-o
+def _write_to(base: str, name: str, content: str, append: bool = False) -> str:
+    """Scrie intr-un fisier din `base`. append=False suprascrie, append=True adauga la final."""
     path = _safe(base, name)
     # Memoram starea initiala
     already_exists = os.path.exists(path)
-    
-    # Daca exista, dar nu e fisier, oprim execuția.
+
+    # Daca exista, dar nu e fisier, oprim executia.
     if already_exists and not os.path.isfile(path):
         return "Numele dat exista deja, dar nu este un fisier valid."
 
-    # Incercam scrierea
+    # "a" da append, "w" suprascrie.
+    if append:
+        mode = "a"
+    else:
+        mode = "w"
+
     try:
-        with open(path, "w", encoding="utf-8") as f:
+        with open(path, mode, encoding="utf-8") as f:
             f.write(content)
     except PermissionError:
         return "Nu ai permisiune asupra acestui fisier."
@@ -104,17 +109,22 @@ def _write_to(base: str, name: str, content: str) -> str:
     except FileNotFoundError:
         return INVALID_NAME
 
-    # Formam mesajul de raspuns, acum ca stim sigur ca scrierea a reusit
+    # Formam mesajul de raspuns, acum ca stim sigur ca operatia ceruta a reusit
+    if append:
+        if not content:
+            return f"Nu s-a adaugat nimic in {name} (continut gol)."
+        return f"Adaugarea la finalul fisierului {name} a avut succes."
+    
     if not already_exists:
         if not content:
             return f"Fisierul {name} creat este gol."
-        else:
-            return f"Crearea si scrierea in {name} a continutului dat a avut succes."
-    else:
-        return_msg = f"Suprascrierea fisierului {name} cu continutul dat a avut succes."
-        if not content:
-            return_msg += " Atentie. Fisierul suprascris este acum gol."
-        return return_msg
+        return f"Crearea si scrierea in {name} a continutului dat a avut succes."
+    
+    return_msg = f"Suprascrierea fisierului {name} cu continutul dat a avut succes."
+
+    if not content:
+        return_msg += " Atentie. Fisierul este acum gol."
+    return return_msg
 
 # Functie ce scrie un email. Aici nu ne mai punem problema existentei altui email
 # cu EXACT acelasi Subject
@@ -157,9 +167,9 @@ def list_files() -> str:
     """Listeaza fisierele din sandbox/files."""
     return _list_dir(FILES, "Nu exista fisiere in folderul de lucru.")
 
-# Tool ce scrie/suprascrie in FILES un fisier
-def write_file(name: str, content: str) -> str:
-    return _write_to(FILES, name, content)
+# Tool ce scrie in FILES un fisier. mode="write" suprascrie, mode="append" adauga la final.
+def write_file(name: str, content: str, mode: str = "write") -> str:
+    return _write_to(FILES, name, content, append=(mode == "append"))
 
 # Tool ce sterge un fisier din FILES/INBOX
 def delete_file(name: str) -> str:
@@ -208,6 +218,32 @@ def calculator(expression: str) -> str:
     return str(eval(expression, {"__builtins__": {}}, {}))
 
 # BROWSER:
+
+# Citeste fisiere doar cu extensia .html, pentru a nu se suprapune cu read_file.
+# Fisierele .html sunt gandite ca snapshot-uri de pe internet. Sunt gandite in acest fel
+# Deoarece nu vrem sa existe suprapuneri atunci cand testam modelul (exemplu simplu: Fac test azi
+# cu promptul "Afiseaza-mi ultima stire de pe Ziarul Financiar.". Daca ma intorc peste o saptamana si
+# tool-ul de browser ar functiona pe URL-uri, nu am mai avea acelasi rezultat. Cum cele doua implementari sunt
+# apropiate dpdv tehnic, am decis sa lucram pe snapshot-uri, pentru o testare mai buna a agentului cu date fixe)
+def browser(name: str) -> str:
+    """Acceseaza o pagina web (.html) din folderul de lucru si intoarce continutul ei brut."""
+    if not name.endswith(".html"):
+        return "Pagina ceruta nu a putut fi accesata. Nu este in format .html"
+
+    path = _safe(FILES, name)
+
+    try:
+        with open(path, encoding="utf-8") as f:
+            web_page = f.read()
+        if web_page:
+            return web_page
+        return f"Pagina {name} este goala."
+    except FileNotFoundError:
+        return "Pagina ceruta nu exista."
+    except IsADirectoryError:
+        return "Pagina ceruta este un folder, nu o pagina web."
+    except PermissionError:
+        return "Nu ai permisiunile necesare pentru a citi aceasta pagina web."
 
 # TERMINAL:
 
@@ -345,6 +381,7 @@ REGISTRY = {
     "send_email": send_email,
     "delete_email": delete_email,
     "calculator": calculator,
+    "browser": browser,
     "run_command": run_command
 }
 
