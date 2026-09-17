@@ -1,0 +1,26 @@
+# Preturi per 1.000.000 de tokeni, in USD.
+# Folosit de src/harness.py ca sa calculeze coloana cost_usd din results.csv.
+# Tokenii vin din logs/trace.jsonl (evenimentul run_end), scris de src/agent.py.
+#
+# Modelele locale (Ollama) au pretul 0: ruleaza pe masina noastra, nu platim
+# per token.
+
+llama3.1:
+  input: 0.0
+  output: 0.0
+
+# Exemple pentru pasul 3 (modele platite). 
+#
+# gpt-4o-mini:
+#   input: 
+#   output: 
+#
+# claude-haiku:
+#   input: 0.80
+#   output: 4.00
+
+# Folosit daca modelul rulat nu apare mai sus.
+# Zero, ca sa nu inventam un cost fals
+default:
+  input: 0.0
+  output: 0.0

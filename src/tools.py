@@ -412,7 +412,9 @@ def _check_args(func, args: dict) -> str | None:
 
     absent_args = list()
     for p, v in params.items():
-        # daca value e empty si p nu e in lista de argumente
+        # daca default-ul e gol(daca nu ar fi fost gol, parametrul ar fi avut
+        # un argument adaugat implicit - ok=True) si parametrul nu e in argumente,
+        # inseamna ca este un argument absent
         if v.default is inspect.Parameter.empty and p not in args:
             absent_args.append(p)
 

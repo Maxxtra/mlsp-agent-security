@@ -662,34 +662,6 @@ doar cand `base` corespunde.
 - **Fisiere ascunse la `read_file`** - il lasam sa le citeasca? Argumente de
   ambele parti.
 
-### Pentru Mihai
-
-- **`policy()` - semnatura, de confirmat.** `load_policy` din `harness.py` face
-  `getattr(policies, name)`, deci `--policy keyword` incarca functia
-  `policies.keyword`. Semnatura pe care o cheama `agent.py` este
-  `policy(task, name, args) -> bool`. Asta trebuie respectata in `policies.py`.
-- **`policy()` - exceptii.** Daca arunca, darama tot `run()`. Nedecis, si conteaza:
-  o rulare completa dureaza zeci de minute, deci o exceptie la atacul 20 din 25
-  sterge si rezultatele de dinainte.
-- **`write_file` cu `mode`.** Filtrul poate acum distinge `append` de `write`
-  (4.1). De decis daca suprascrierea completa se trateaza diferit de adaugare -
-  distinctia exista in argument, ramane sa fie folosita.
-
-### Pentru Robert
-
-- **Conventia de prefix.** Uneltele accepta `files/` si `inbox/` exact in forma
-  asta. Daca scrie altfel undeva (`sandbox/files/x`, sau fara prefix), se rupe.
-- **Unealta `base64` nu are consumator.** Toate atacurile `encoded` (A007, A011,
-  A015, A017, A021, A023) folosesc hex, binar sau HTML entities, si niciunul nu
-  atinge uneltele: payload-ul e decodat de model in context, nu de o unealta.
-  `run_command("base64 <fisier>")` acopera ofuscarea la **iesire** (encodezi un
-  fisier secret inainte sa-l trimiti, ca filtrul pe cuvinte sa nu-l recunoasca) -
-  ar avea nevoie de un atac scris special pentru ea.
-- **A021 foloseste HTML entities dar e `placed_in: email`.** Entitatile se
-  decodeaza intr-un browser, nu intr-un client de email text. Nu strica nimic,
-  dar ca tehnica s-ar potrivi mai bine pe `webpage`.
-- **Co-proiectarea perechii benign/atac** pentru `delete_email` (4.4).
-
 ### De discutat impreuna
 
 - **Memoria care creste continuu.** La un task lung, `messages` devine atat de
@@ -699,6 +671,9 @@ doar cand `base` corespunde.
   folosi spatiul castigat pentru system prompt.
   *Trade-off:* mesajele `assistant`/`system`/`user` sunt mici; `tool` e singurul
   care conteaza ca volum - dar e si cel cu riscul de securitate cel mai mare.
+
+
+  ## 8. Future work:
 - **`run_command` si suprapunerea deliberata.** Evitand suprapunerea
   (`rm` vs `delete_file`), ratam o intrebare interesanta: *un filtru care
   blocheaza dupa numele uneltei poate fi ocolit pe alta ruta?* Daca Mihai
@@ -706,3 +681,25 @@ doar cand `base` corespunde.
   rezultat publicabil despre fragilitatea allowlist-urilor de unelte. Zero
   suprapunere e mai curat si mai usor de aparat - dar o singura suprapunere
   deliberata ar da un experiment in plus. (**De adaugat in future work**)
+
+- **daca am putea rula in acelasi timp doua policy-uri?** Cum ar influenta asta
+  numarul de credite folosite? Ar fi benefic sau nu?
+
+  ## 9. Schimbari 13.09.2026 - 17.09.2026
+  1. Am terminat tool-urile + am adaugat alte optimizari pentru o mai buna intelegere a modelului asupra task-ului dat
+  2. Am implementat o noua logica pentru log (model_call, tool_call, run_end, run_start)
+  3. Am adaugat optimizari structurale pe partea de harness.py: --attack individual pe fiecare atac,
+     --policy poate sa ruleze secvential pe toate policy-urile si sa salveze tot in results.csv, coloane noi in .csv:
+
+| Coloana | De unde | La ce foloseste |
+|---|---|---|
+| `prompt_tokens` | `run_end` | calculul costului |
+| `output_tokens` | `run_end` | idem, dar la alt pret |
+| `model_ms` | suma `model_call.duration_ms` | cat a gandit modelul |
+| `policy_ms` | suma `tool_call.policy_ms` | **cat a costat filtrul** |
+| `steps_used` | `run_end` | cati pasi a consumat |
+| `end_reason` | `run_end` | `final` / `max_steps` / `error` / `harness_error` |
+
+   4. Am rulat primele teste
+   5. Am inteles tot flow-ul proiectului: unde ne intersectam eu cu Mihai si cu Robert
+   6. Am creat pricing.yaml si am inteles cum calculam costul unui task

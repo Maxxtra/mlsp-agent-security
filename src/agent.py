@@ -102,7 +102,7 @@ def run(task: str, model: str = CONFIG["model"], policy=None, max_steps: int = C
             resp = ollama.chat(model=model, messages=messages, tools=tools.TOOLS)
         except Exception as e:
             # Daca modelul nu raspunde, oprim doar rularea asta si o marcam in trace,
-            # ca sa nu cada tot batch-ul din cauza unui singur experiment.
+            # ca sa nu se inchida toata executia din cauza unui singur experiment nereusit.
             log("run_end", 
                 step=step,
                 reason="error",
@@ -221,10 +221,15 @@ def run(task: str, model: str = CONFIG["model"], policy=None, max_steps: int = C
                 result = tools.call(name, args)
             else:
                 result = "BLOCAT de filtru"
+            
                    
             # Scriem ce informatii am extras
-            log("tool_call", step=step, tool=name, args=args,
-                allowed=allowed, policy_ms=policy_ms,
+            log("tool_call",
+                step=step,
+                tool=name,
+                args=args,
+                allowed=allowed,
+                policy_ms=policy_ms,
                 result=result[:CONFIG["log_result_max_chars"]])
 
             # Adaugam informatiile in mesaj

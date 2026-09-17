@@ -15,8 +15,9 @@ import os
 import shutil
 import time
 
-import agent
+import yaml
 
+import agent
 
 # PATHS
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +28,72 @@ SANDBOX = os.path.join(ROOT, "sandbox")
 SANDBOX_TEMPLATE = os.path.join(ROOT, "sandbox_template")
 RESULTS_DIR = os.path.join(ROOT, "results")
 RUNS = os.path.join(ROOT, "runs")
+
+
+# PRETURI
+# Incarcate o singura data, la import. Daca fisierul lipseste, costul ramane 0
+# si se afiseaza un avertisment - nu vrem sa cada tot batch-ul pentru asta.
+PRICING_PATH = os.path.join(ROOT, "config", "pricing.yaml")
+try:
+    with open(PRICING_PATH, encoding="utf-8") as _f:
+        PRICING = yaml.safe_load(_f) or {}
+except FileNotFoundError:
+    print(f"Atentie: {PRICING_PATH} lipseste, cost_usd va fi 0.")
+    PRICING = {}
+
+
+def read_trace_stats(trace_path: str) -> dict:
+    """Citeste trace-ul unei rulari si aduna ce nu se poate masura din afara.
+
+    `latency_ms` masurat de harness e timpul total: gandirea modelului + uneltele
+    + filtrul, la gramada. Ca sa putem spune "politica X adauga Y ms per apel",
+    avem nevoie de defalcare, iar ea exista doar in trace.
+    """
+    stats = {
+        "prompt_tokens": 0,
+        "output_tokens": 0,
+        "model_ms": 0,
+        "policy_ms": 0,
+        "steps_used": 0,
+        "end_reason": "",
+    }
+
+    try:
+        with open(trace_path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                event_type = event.get("event")
+                if event_type == "model_call":
+                    stats["model_ms"] += event.get("duration_ms", 0)
+                elif event_type == "tool_call":
+                    stats["policy_ms"] += event.get("policy_ms", 0)
+                elif event_type == "run_end":
+                    # run_end poarta totalurile deja insumate de agent.
+                    stats["prompt_tokens"] = event.get("total_prompt_tokens", 0)
+                    stats["output_tokens"] = event.get("total_output_tokens", 0)
+                    stats["steps_used"] = event.get("steps_used", 0)
+                    stats["end_reason"] = event.get("reason", "")
+    except FileNotFoundError:
+        pass
+
+    return stats
+
+
+def compute_cost(model: str, prompt_tokens: int, output_tokens: int) -> float:
+    """Cost in USD, din tokeni si preturile din config/pricing.yaml."""
+    prices = PRICING.get(model) or PRICING.get("default") or {}
+    cost = (
+        prompt_tokens * prices.get("input", 0.0)
+        + output_tokens * prices.get("output", 0.0)
+    ) / 1000000
+    return round(cost, 6)
 
 
 # SANDBOX
@@ -284,11 +351,20 @@ def run_experiment(
 
     success = check(success_check)
 
+    # Trace-ul e citit ACUM, inainte ca save_run_artifacts sa-l copieze si
+    # inainte ca urmatorul experiment sa-l stearga prin reset_agent_trace().
+    stats = read_trace_stats(agent.LOG)
+
     return {
         "success": success,
         "latency_ms": latency_ms,
-        "cost_usd": 0.0,
-        "response": response
+        "cost_usd": compute_cost(
+            model,
+            stats["prompt_tokens"],
+            stats["output_tokens"]
+        ),
+        "response": response,
+        **stats
     }
 
 
@@ -310,14 +386,22 @@ def save_results(
         policy_name,
         int(result["success"]),
         result["latency_ms"],
-        result["cost_usd"]
+        result["cost_usd"],
+        result.get("prompt_tokens", 0),
+        result.get("output_tokens", 0),
+        result.get("model_ms", 0),
+        result.get("policy_ms", 0),
+        result.get("steps_used", 0),
+        result.get("end_reason", "")
     ])
 
     print(
         f"{attack['id']:<8} "
         f"{experiment_type:<8} "
         f"success={result['success']} "
-        f"{result['latency_ms']}ms"
+        f"{result['latency_ms']}ms "
+        f"pasi={result.get('steps_used', 0)} "
+        f"({result.get('end_reason', '')})"
     )
 
 
@@ -347,7 +431,10 @@ def main():
 
     parser.add_argument(
         "--policy",
-        default=None
+        default=None,
+        help="Una sau mai multe politici, separate prin virgula (ex: keyword sau "
+             "none,keyword,allowlist). 'none' inseamna fara filtru - linia de baza. "
+             "Toate ajung in acelasi CSV, ca sa poata fi comparate direct."
     )
 
     parser.add_argument(
@@ -356,12 +443,33 @@ def main():
         help="Ruleaza toate scenariile fara plantarea payload-ului."
     )
 
+    parser.add_argument(
+        "--attack",
+        default=None,
+        help="Ruleaza doar scenariile date, separate prin virgula (ex: A003 sau A001,A003). "
+             "Util la depanare: o rulare completa dureaza zeci de minute."
+    )
+
     args = parser.parse_args()
 
-    policy = load_policy(args.policy)
+#   --policy keyword         -> o trecere, cu filtrul keyword
+#   --policy none,keyword    -> doua treceri: fara filtru, apoi cu keyword
+#   fara --policy            -> o trecere, fara filtru
+    if args.policy:
+        policy_names = [p.strip() for p in args.policy.split(",")]
+    else:
+        policy_names = ["none"]
+
+    # Incarcam toate politicile ACUM, inainte de orice rulare.
+    # Altfel un nume gresit s-ar descoperi dupa 30 de minute, la a doua trecere.
+    policies_to_run = []
+    for name in policy_names:
+        if name == "none":
+            policies_to_run.append(("none", None))
+        else:
+            policies_to_run.append((name, load_policy(name)))
 
     model_name = args.model
-    policy_name = args.policy or "none"
 
     # Stabilim tipul experimentului.
     #
@@ -420,7 +528,14 @@ def main():
             "policy",
             "success",
             "latency_ms",
-            "cost_usd"
+            "cost_usd",
+            # Coloanele de mai jos vin din trace, nu se pot masura din afara.
+            "prompt_tokens",
+            "output_tokens",
+            "model_ms",
+            "policy_ms",
+            "steps_used",
+            "end_reason"
         ])
 
         # Gasim toate scenariile din attacks/.
@@ -437,91 +552,130 @@ def main():
             )
         ])
 
-        # Ruleaza fiecare scenariu.
-        for path in attack_paths:
+        # --attack A003  sau  --attack A001,A003
+        if args.attack:
+            requested = {x.strip().upper() for x in args.attack.split(",")}
+            attack_paths = [
+                p for p in attack_paths
+                if os.path.basename(p).removesuffix(".json").upper() in requested
+            ]
+            if not attack_paths:
+                print(f"Niciun scenariu care sa se potriveasca cu: {args.attack}")
+                return
 
-            with open(
-                path,
-                encoding="utf-8"
-            ) as attack_file:
-                attack = json.load(
-                    attack_file
+        # Bucla exterioara: politicile. Bucla interioara: scenariile.
+        # Ordinea conteaza: pentru fiecare politica parcurgem toate scenariile,
+        # ca rezultatele unei politici sa fie grupate in CSV.
+        for policy_name, policy in policies_to_run:
+
+            print(f"\n########## POLITICA: {policy_name} ##########")
+
+            # Ruleaza fiecare scenariu.
+            for path in attack_paths:
+
+                with open(
+                    path,
+                    encoding="utf-8"
+                ) as attack_file:
+                    attack = json.load(
+                        attack_file
+                    )
+
+                print(
+                    f"\n=== "
+                    f"{attack['id']} "
+                    f"{experiment_type.upper()} "
+                    f"==="
                 )
 
-            print(
-                f"\n=== "
-                f"{attack['id']} "
-                f"{experiment_type.upper()} "
-                f"==="
-            )
+                # Pregateste sandbox-ul.
+                #
+                # attack:
+                #     reset + used_files + payload
+                #
+                # benign:
+                #     reset + used_files
+                #     FARA payload
+                prepare_experiment(
+                    attack,
+                    attack_enabled=attack_enabled
+                )
 
-            # Pregateste sandbox-ul.
-            #
-            # attack:
-            #     reset + used_files + payload
-            #
-            # benign:
-            #     reset + used_files
-            #     FARA payload
+                # Pregateste folderul runs/.
+                run_directory = prepare_run_directory(
+                    attack["id"],
+                    experiment_type
+                )
 
-            prepare_experiment(
-                attack,
-                attack_enabled=attack_enabled
-            )
-
-            # Pregateste folderul runs/.
-            run_directory = prepare_run_directory(
-                attack["id"],
-                experiment_type
-            )
-
-            # Trace-ul trebuie sa contina doar experimentul curent.
-            reset_agent_trace()
+                # Trace-ul trebuie sa contina doar experimentul curent.
+                reset_agent_trace()
             
-            # Alegem success_check-ul potrivit.
-            #
-            # benign:
-            #     verificam benign_success_check
-            #
-            # attack:
-            #     verificam attack_success_check
+                # Alegem success_check-ul potrivit.
+                #
+                # benign:
+                #     verificam benign_success_check
+                #
+                # attack:
+                #     verificam attack_success_check
+                if args.benign:
+                    success_check = attack[
+                        "benign_success_check"
+                    ]
+                else:
+                    success_check = attack[
+                        "attack_success_check"
+                    ]
 
-            if args.benign:
-                success_check = attack[
-                    "benign_success_check"
-                ]
-            else:
-                success_check = attack[
-                    "attack_success_check"
-                ]
+                # Ruleaza agentul.
+                #
+                # Daca un singur scenariu crapa (model cazut, success_check cu tip
+                # necunoscut, fisier lipsa), nu vrem sa pierdem si restul batch-ului:
+                # o trecere completa dureaza zeci de minute. Notam esecul ca
+                # success=0 si continuam.
+                try:
+                    result = run_experiment(
+                        attack,
+                        success_check,
+                        args.model,
+                        policy
+                    )
+                except Exception as e:
+                    print(f"    EROARE la {attack['id']}: {type(e).__name__}: {e}")
+                    # Aceleasi chei ca run_experiment, ca CSV-ul sa aiba
+                    # coloanele completate. end_reason marcheaza clar ca rularea
+                    # a cazut in harness, nu ca agentul a raspuns.
+                    result = {
+                        "success": False,
+                        "latency_ms": 0,
+                        "cost_usd": 0.0,
+                        "response": f"(eroare: {type(e).__name__}: {e})",
+                        "prompt_tokens": 0,
+                        "output_tokens": 0,
+                        "model_ms": 0,
+                        "policy_ms": 0,
+                        "steps_used": 0,
+                        "end_reason": "harness_error",
+                    }
 
-            # Ruleaza agentul.
-            result = run_experiment(
-                attack,
-                success_check,
-                args.model,
-                policy
-            )
+                # Salveaza trace + raspuns final.
+                save_run_artifacts(
+                    run_directory,
+                    result["response"]
+                )
 
-            # Salveaza trace + raspuns final.
-            save_run_artifacts(
-                run_directory,
-                result["response"]
-            )
+                # Salveaza rezultatul in CSV.
+                save_results(
+                    writer,
+                    attack,
+                    experiment_type,
+                    model_name,
+                    policy_name,
+                    result
+                )
 
-            # Salveaza rezultatul in CSV.
-            save_results(
-                writer,
-                attack,
-                experiment_type,
-                model_name,
-                policy_name,
-                result
-            )
-
-            # Scriem rezultatul imediat pe disk.
-            # Util daca o rulare ulterioara crapa.
-            results_file.flush()
+                # Scriem rezultatul imediat pe disk.
+                # Util daca o rulare ulterioara crapa.
+                results_file.flush()
 
     print(
         f"\nResults saved to: {results_path}"
