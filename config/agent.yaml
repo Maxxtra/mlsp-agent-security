@@ -3,7 +3,7 @@
 # nu la folderul din care rulez comanda.
 
 # Numele modelului.
-model: llama3.1
+model: qwen3:14b
 # Cate treceri prin bucla are voie agentul inainte sa se opreasca.
 max_steps: 50
 
