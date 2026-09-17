@@ -18,6 +18,7 @@ import time
 import yaml
 
 import agent
+import policies
 
 # PATHS
 HERE = os.path.dirname(os.path.abspath(__file__))
