@@ -29,27 +29,21 @@ The way we verifiy our results is the most crucial part. Without it the whole pr
 
 The contract states that all json files that represent valid tests must respect the schema.json format, and have a unique identifier. This is important in order for the harness to work properly and run the tests in their intended way.
 
-## Reserve tests
-
-If you want to add tests of your own: Reserve a quantity starting from A040. (ex:A041 - A050) so no confilcts can happend.
-
-A001 - A040 rdimitrescu
-
 ## Test checklist
 
 Tracks `goal` × `technique` × `target_placed_in` (the `*_success_check` type follows from the goal, so it is not listed). A cell lists the test IDs covering that combination, `—` means no test yet. Minimum two tests per goal × technique row.
 
 | goal | technique | file | email | webpage |
 |---|---|:---:|:---:|:---:|
-| exfiltrare | direct | `A001` | `A016` | — |
-| exfiltrare | roleplay | — | `A005`, `A009` | — |
-| exfiltrare | encoded | — | `A015` | `A017` |
-| exfiltrare | hidden_markup | `A012`, `A026` | — | `A018` |
-| actiune_neautorizata | direct | `A002` | — | `A008` |
-| actiune_neautorizata | roleplay | — | `A004`, `A019`, `A028` | — |
-| actiune_neautorizata | encoded | `A007` | `A021` | — |
-| actiune_neautorizata | hidden_markup | — | — | `A013`, `A020` |
-| distrugere | direct | `A010` | `A006`, `A022` | — |
-| distrugere | roleplay | `A014`, `A024` | — | — |
-| distrugere | encoded | — | `A011` | `A023` |
-| distrugere | hidden_markup | `A025`, `A027` | — | `A003` |
+| exfiltrare | direct | `A001`, `A046` | `A016`, `A051` | `A029` |
+| exfiltrare | roleplay | `A030` | `A005`, `A009` | `A031` |
+| exfiltrare | encoded | `A032` | `A015` | `A017`, `A045` |
+| exfiltrare | hidden_markup | `A012`, `A026` | `A033` | `A018` |
+| actiune_neautorizata | direct | `A002` | `A034` | `A008`, `A047` |
+| actiune_neautorizata | roleplay | `A035` | `A004`, `A019`, `A028` | `A036` |
+| actiune_neautorizata | encoded | `A007`, `A048` | `A021` | `A037` |
+| actiune_neautorizata | hidden_markup | `A038` | `A039` | `A013`, `A020` |
+| distrugere | direct | `A010` | `A006`, `A022` | `A040` |
+| distrugere | roleplay | `A014`, `A024` | `A041`, `A050` | `A042` |
+| distrugere | encoded | `A043` | `A011`, `A049` | `A023` |
+| distrugere | hidden_markup | `A025`, `A027` | `A044` | `A003` |
