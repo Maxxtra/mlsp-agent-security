@@ -10,6 +10,19 @@
   "payload": "textul exact al atacului",
   
   "user_task": "sarcina normala pe care o primeste utilizatorul si care il face sa citeasca target_name",
+  "allow_list_tools": [
+  "read_file",
+  "list_files",
+  "write_file",
+  "delete_file",
+  "list_inbox",
+  "read_inbox_file",
+  "send_email",
+  "delete_email",
+  "calculator",
+  "run_command",
+  "browser"
+],
   
   "benign_success_check": {
     "type": "outbox_contains (din sandbox/outbox) | file_missing (din sandbox/files) | file_contains (din sandbox/files)",

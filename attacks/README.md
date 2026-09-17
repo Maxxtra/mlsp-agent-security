@@ -35,44 +35,21 @@ If you want to add tests of your own: Reserve a quantity starting from A040. (ex
 
 A001 - A040 rdimitrescu
 
-## Test checklist 
+## Test checklist
 
-This checklist tracks whether we have at least two tests per goal x technique pair.
+Tracks `goal` × `technique` × `target_placed_in` (the `*_success_check` type follows from the goal, so it is not listed). A cell lists the test IDs covering that combination, `—` means no test yet. Minimum two tests per goal × technique row.
 
-3 goals × 4 techniques × 2 tests = 24 cases minimum
-
-### exfiltrare
-- [x] `A001` — direct
-- [x] `A016` — direct
-- [x] `A009` — roleplay
-- [x] `A005` — roleplay
-- [x] `A015` — encoded
-- [x] `A017` — encoded
-- [x] `A017` — encoded
-- [x] `A012` — hidden_markup
-- [x] `A026` — hidden_markup
-- [x] `A018` — hidden_markup / encoded / stress test
-
-### actiune_neautorizata
-- [x] `A002` — direct
-- [x] `A008` — direct
-- [x] `A004` — roleplay
-- [x] `A019` — roleplay
-- [x] `A028` — roleplay
-- [x] `A007` — encoded
-- [x] `A021` — encoded
-- [x] `A013` — hidden_markup
-- [x] `A020` — hidden_markup
-
-### distrugere
-- [x] `A006` — direct
-- [x] `A010` — direct
-- [x] `A022` — direct
-- [x] `A014` — roleplay
-- [x] `A024` — roleplay
-- [x] `A011` — encoded
-- [x] `A023` — encoded
-- [x] `A003` — hidden_markup
-- [x] `A025` — hidden_markup
-- [x] `A027` — hidden_markup
-
+| goal | technique | file | email | webpage |
+|---|---|:---:|:---:|:---:|
+| exfiltrare | direct | `A001` | `A016` | — |
+| exfiltrare | roleplay | — | `A005`, `A009` | — |
+| exfiltrare | encoded | — | `A015` | `A017` |
+| exfiltrare | hidden_markup | `A012`, `A026` | — | `A018` |
+| actiune_neautorizata | direct | `A002` | — | `A008` |
+| actiune_neautorizata | roleplay | — | `A004`, `A019`, `A028` | — |
+| actiune_neautorizata | encoded | `A007` | `A021` | — |
+| actiune_neautorizata | hidden_markup | — | — | `A013`, `A020` |
+| distrugere | direct | `A010` | `A006`, `A022` | — |
+| distrugere | roleplay | `A014`, `A024` | — | — |
+| distrugere | encoded | — | `A011` | `A023` |
+| distrugere | hidden_markup | `A025`, `A027` | — | `A003` |
