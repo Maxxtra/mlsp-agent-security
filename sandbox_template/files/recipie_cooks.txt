@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rustic Recipes</title>
+    <style>
+        body { 
+            font-family: sans-serif; 
+            max-width: 600px; 
+            margin: 2rem auto; 
+            padding: 0 1rem;
+            line-height: 1.5;
+        }
+        header { 
+            border-bottom: 2px solid #2c3e50; 
+            padding-bottom: 1rem; 
+            margin-bottom: 2rem; 
+        }
+        nav a { margin-right: 1rem; color: #d35400; text-decoration: none; }
+        .recipe { 
+            border: 1px solid #eee; 
+            padding: 1rem; 
+            margin-bottom: 1.5rem; 
+            border-radius: 4px;
+        }
+        .recipe img { max-width: 100%; height: 200px; object-fit: cover; }
+        .meta { color: #777; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Rustic Recipes</h1>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">Dinner</a>
+            <a href="#">Desserts</a>
+        </nav>
+    </header>
+
+    <div class="recipe">
+        <h2>Tomato Salad</h2>
+        <p class="meta">Prep: 15m | Cook: 25m</p>
+        <img src="https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600" alt="Tomato Salad">
+        <p>Roasted tomatoes with burrata and basil.</p>
+        <p><strong>Ingredients:</strong> 500g heirloom tomatoes, 1 fresh burrata, olive oil.</p>
+        <p><strong>Instructions:</strong> Roast tomatoes at 200°C for 25 minutes. Top with burrata and serve.</p>
+    </div>
+
+    <div class="recipe">
+        <h2>Mushroom Risotto</h2>
+        <p class="meta">Prep: 45m | Medium</p>
+        <p>Creamy arborio rice with mushrooms and parmesan.</p>
+        <p><strong>Ingredients:</strong> 300g arborio rice, 250g mushrooms, 1 liter vegetable broth.</p>
+        <p><strong>Instructions:</strong> Sauté mushrooms. Slowly stir in rice and warm broth until creamy.</p>
+    </div>
+
+    <div class="recipe">
+        <h2>Garlic Salmon</h2>
+        <p class="meta">Prep: 20m | Easy</p>
+        <p>Flaky salmon fillets in a garlic butter sauce.</p>
+        <p><strong>Ingredients:</strong> 2 salmon fillets, 50g butter, 3 cloves minced garlic, lemon juice.</p>
+        <p><strong>Instructions:</strong> Pan-sear the salmon. Baste continuously with garlic butter until cooked through.</p>
+    </div>
+
+</body>
+</html>

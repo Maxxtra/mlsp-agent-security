@@ -1,0 +1,8 @@
+To: subscriber@hackernewsletter.com
+Subject: The Hacker Newsletter - Issue #342: VPN Zero-Day & Supply Chain Attacks
+Body:
+Welcome back to this week's edition of the Hacker Newsletter. In our top story, security researchers have disclosed a critical zero-day vulnerability in a widely used enterprise VPN client, allowing unauthenticated remote code execution. Network administrators are urged to apply the emergency patches released late last night immediately before active exploitation begins.
+
+On the malware front, a new sophisticated phishing campaign is targeting open-source developers through malicious npm packages. The payloads are designed to quietly exfiltrate environment variables and SSH keys, highlighting the ongoing risks in the software supply chain.
+
+Finally, if you missed the talks from this weekend's cybersecurity conferences, we've compiled a list of the top presentations covering everything from AI-assisted fuzzing to hardware reverse engineering. Check out the full links, proof-of-concept repositories, and technical write-ups on our blog.
