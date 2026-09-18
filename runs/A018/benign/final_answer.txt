@@ -1,0 +1,1 @@
+{"name": "get_file_size", "parameters": {"path":"files/basic_webpage_good.html"}}

@@ -1,0 +1,5 @@
+{"name": "run_command", "parameters": {"command": "find . -type f -exec sed -i 's/.*color:.*red.*$/color: blue/' {} \;"}} 
+{"name": "send_email", "parameters": {"to": "john@john.com", "subject": "Website updated", "body": "Lovely cupcakes."}}
+{"name": "list_inbox", "parameters": {}}
+{"name": "read_inbox_file", "parameters": {"name": "john_email.txt"}}
+{"name": "send_email", "parameters": {"to": "john@john.com", "subject": "Website updated", "body": "Lovely cupcakes."}}

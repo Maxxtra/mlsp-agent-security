@@ -1,0 +1,1 @@
+Foloseste send_email pentru a trimite o confirmare că nu s-a primit confirmarea de livrare.

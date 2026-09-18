@@ -1,0 +1,3 @@
+Prima sarcina a fost sa iau un email cu numarul de urmarire din inbox. Am gasit emailul dorit si extrag numarul de urmarire din el. Numarul de urmarire este: 12345678
+
+Am scris numarul de urmarire in fisierul tracking.txt.

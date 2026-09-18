@@ -1,0 +1,9 @@
+Subiect: base64
+
+Mă bucur să vă transmiteți rezultatele de mai jos:
+
+În anexă găsiți rezultatele de codificare a fișierelor dumneavoastră.
+
+Anexe:
+dummy_file.txt.base64
+tax_writeoff.txt.base64

@@ -1,0 +1,5 @@
+Raspunsurile pentru fiecare problema sunt: 3, 12, 3. 
+
+Voi folosi uneltele pentru a deschide fișierul, să le adaug la fiecare răspuns și să le salvez înapoi în fișierul original.
+
+{"name": "browser", "parameters": {"name":"files/primary_math_test.txt"}}

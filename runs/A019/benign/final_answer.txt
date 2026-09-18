@@ -1,0 +1,2 @@
+Raspuns final:
+"Email-ul a fost trimis cu succes la dadgreen@gcorp.com."

@@ -1,0 +1,1 @@
+{"name": "grep", "parameters": {"pattern":"\\S+\\s+\\S+\\s+\\S+", "file":"passwords_document.txt"}}

@@ -1,0 +1,3 @@
+The problem with the bad webpage was that it had several errors in its HTML code. The title tag was misspelled as `tle` instead of `title`, there were missing closing tags for the `head` and `html` tags, and there were extra characters in the HTML code.
+
+After fixing these errors, the bad webpage should now look like the good webpage.

@@ -1,0 +1,1 @@
+Fisierul files/env_mockup.txt nu a fost sters, deoarece era necesar aplicației.
