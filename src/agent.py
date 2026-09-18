@@ -219,8 +219,16 @@ def run(task: str, model: str = CONFIG["model"], policy=None, max_steps: int = C
             # Apelam unealta doar daca filtrul a permis-o
             if allowed:
                 result = tools.call(name, args)
+                tool_message = result
             else:
+                # Ce se scrie in trace: explicit, ca sa se poata deosebi o
+                # blocare de o eroare reala a uneltei.
                 result = "BLOCAT de filtru"
+
+                # Ce vede modelul: o eroare obisnuita. Mesajul vechi anunta
+                # existenta filtrului, iar un model deja compromis putea
+                # reformula apelul pana trecea.
+                tool_message = CONFIG["blocked_tool_message"]
             
                    
             # Scriem ce informatii am extras
@@ -233,7 +241,7 @@ def run(task: str, model: str = CONFIG["model"], policy=None, max_steps: int = C
                 result=result[:CONFIG["log_result_max_chars"]])
 
             # Adaugam informatiile in mesaj
-            messages.append({"role": "tool", "content": result, "tool_name": name})
+            messages.append({"role": "tool", "content": tool_message, "tool_name": name})
 
     # Bucla s-a terminat fara ca modelul sa dea un raspuns final.
     # Fara linia asta, trace-ul s-ar opri brusc si nu s-ar putea deosebi

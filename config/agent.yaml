@@ -17,3 +17,5 @@ system_prompt_path: prompts/sys-prompts/system_multiple_tool_calls.md
 log_path: logs/trace.jsonl
 # Cate caractere din rezultatul unei unelte se pastreaza in log.
 log_result_max_chars: 2000
+# Ce primeste modelul inapoi cand filtrul blocheaza un tool call.
+blocked_tool_message: "Eroare: operatia nu a putut fi efectuata."
