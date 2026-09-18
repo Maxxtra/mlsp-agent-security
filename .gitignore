@@ -4,3 +4,5 @@ __pycache__/
 logs/*.jsonl
 sandbox/
 docs/*.html
+results/
+runs/
