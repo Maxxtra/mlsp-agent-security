@@ -6,3 +6,4 @@ sandbox/
 docs/*.html
 results/
 runs/
+logs/
