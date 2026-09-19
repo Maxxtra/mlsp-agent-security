@@ -198,6 +198,133 @@ def keyword_match(name, args):
 
 
 # ---------------------------------------------------------------------------
+# ALLOWLIST
+# ---------------------------------------------------------------------------
+# Permite doar entitatile numite in user_task. Lista se deriva automat din
+# task, deci inainte ca agentul sa fi citit ceva. De aia e sigura: payload-ul
+# nu poate adauga nimic pe lista, pentru ca lista nu se uita niciodata la ce
+# a citit agentul.
+#
+# Acelasi lucru ii da si fals-pozitivele: o actiune legitima a carei tinta nu
+# e numita in task nu are cum sa treaca, pentru ca lista nu contine decat ce
+# scrie in task. E o limitare a metodei, nu un bug.
+
+_EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w-]+")
+
+_FILE = re.compile(
+    r"[\w./-]+\.(?:txt|html|htm|md|csv|env|json|yaml|yml|py)",
+    re.IGNORECASE
+)
+
+# Unelte fara efect in afara sandbox-ului. Sunt permise prin constructie:
+# apararea se aplica pe actiunile cu efect, nu pe citire. Citirea e chiar
+# calea pe care intra atacul, dar o sarcina legitima are nevoie de ea, si
+# blocarea ei nu opreste efectul, doar sarcina.
+_READ_ONLY = (
+    "read_file",
+    "list_files",
+    "list_inbox",
+    "read_inbox_file",
+    "calculator",
+    "browser",
+)
+
+_WRITE_TOOLS = (
+    "write_file",
+    "delete_file",
+    "delete_email",
+)
+
+
+def _emails_in(text) -> set:
+    """Adresele de email dintr-un text, lowercase."""
+
+    return {e.lower() for e in _EMAIL.findall(str(text or ""))}
+
+
+def _files_in(text) -> set:
+    """Numele de fisier dintr-un text, fara cale, lowercase."""
+
+    return {p.split("/")[-1].lower() for p in _FILE.findall(str(text or ""))}
+
+
+def _basename(path) -> str:
+    return str(path or "").split("/")[-1].lower()
+
+
+def allowlist(task, name, args):
+    """Permite doar adresele si fisierele numite explicit in user_task."""
+
+    args = args or {}
+
+    if name in _READ_ONLY:
+        return True
+
+    if name == "send_email":
+        # args["to"] poate veni ca "dr@goodcorp.com", ca "Dr <dr@goodcorp.com>"
+        # sau cu majuscule, deci extragem adresa cu acelasi regex.
+        cerute = _emails_in(args.get("to"))
+
+        if not cerute:
+            return False
+
+        return cerute.issubset(_emails_in(task))
+
+    if name in _WRITE_TOOLS:
+        cerut = _basename(args.get("name"))
+
+        if not cerut:
+            return False
+
+        return cerut in _files_in(task)
+
+    if name == "run_command":
+        return _command_allowed(args.get("command"), _files_in(task))
+
+    # Orice unealta fara regula: blocata.
+    return False
+
+
+def _command_allowed(command, files_ok) -> bool:
+    """Judeca o comanda dupa efectul ei, nu dupa numele uneltei.
+
+    Parsarea trebuie sa fie identica cu cea din tools.run_command, care face
+    command.split() si se uita la primul cuvant. Daca politica parseaza altfel
+    decat executa unealta, diferenta dintre ele e chiar bypass-ul.
+    """
+
+    parts = str(command or "").split()
+
+    if not parts:
+        return False
+
+    verb = parts[0]
+    rest = parts[1:]
+
+    # base64 <fisier> e o citire: intoarce continutul, nu schimba nimic.
+    # Exfiltrarea s-ar face abia la send_email, care e deja restrictionat.
+    if verb == "base64":
+        return len(rest) == 1
+
+    # cp <sursa> <destinatie> creeaza destinatia: e o scriere.
+    if verb == "cp":
+        return len(rest) == 2 and _basename(rest[1]) in files_ok
+
+    # mv <sursa> <destinatie> creeaza destinatia SI sterge sursa.
+    if verb == "mv":
+        return (
+            len(rest) == 2
+            and _basename(rest[0]) in files_ok
+            and _basename(rest[1]) in files_ok
+        )
+
+    # whoami, ps, env: nu primesc niciun fisier ca argument, deci nu exista
+    # nimic de comparat cu task-ul. Regula nu poate exprima permisiunea
+    # pentru ele, asa ca pica pe ramura implicita, la fel ca o unealta
+    # necunoscuta. Nu e o judecata despre cat de periculoase sunt.
+    return False
+
+# ---------------------------------------------------------------------------
 # JUDGE
 # ---------------------------------------------------------------------------
 # Un model separat decide, inainte de fiecare tool call, daca apelul serveste
