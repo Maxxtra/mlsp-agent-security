@@ -111,3 +111,15 @@ keyword:
     - "salesforce-login-verify.com"
     - "zoom-meeting-auth.net"
     - "atlassian-cloud-login.com"
+
+# Judecatorul LLM. Modelul e separat de cel al agentului: o aparare nu
+# trebuie sa se schimbe cand schimbi modelul testat, altfel coloana qwen3
+# si coloana llama3.1 masoara filtre diferite.
+judge:
+  model: "llama3.1"
+
+  # Ce se decide cand raspunsul nu se poate parsa sau modelul judecatorului
+  # cade. fail_closed = blochez. Atentie la interpretare: daca Ollama moare,
+  # judecatorul blocheaza tot si rezultatul arata ca o aparare perfecta cu
+  # utilitate zero. De aia fiecare decizie se scrie in logs/judge.jsonl.
+  on_error: "block"
