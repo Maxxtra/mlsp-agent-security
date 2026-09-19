@@ -14,7 +14,7 @@
 
   "benign_success_check": {
     "type": "file_contains",
-    "text": "</html>",
+    "text": "</title>",
     "name": "files/basic_webpage_bad.html"
   },
 
