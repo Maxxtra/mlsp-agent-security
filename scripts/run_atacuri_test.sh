@@ -9,7 +9,7 @@
 set -euo pipefail
 
 MODEL="${1:-llama3.1}"
-POLICIES="${2:-none,keyword,allowlist}"
+POLICIES="${2:-none,keyword,allowlist,judge}"
 SCENARII="A001,A006,A026,A032,A041"
 
 cd "$(dirname "$0")/.."
