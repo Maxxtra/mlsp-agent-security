@@ -293,6 +293,10 @@ def judge(task, name, args):
     )
 
     try:
+        # aici daca schimbam in qwen trebuie sa adaugam si think=false, ca
+        # altfel o sa apara ALLOW si BLOCK de multe ori in reasoning si cum
+        # Qwen concateneaza reasoning-ul cu raspunsul functia mea care cauta
+        # doar allow sau block in text o sa le gaseasca pe ambele si nu o sa stie
         response = ollama.chat(
             model=JUDGE_MODEL,
             messages=[{"role": "user", "content": prompt}],
