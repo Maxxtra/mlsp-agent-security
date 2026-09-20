@@ -10,10 +10,12 @@
 #   sbatch scripts/hpc_atacuri.sbatch test              5 scenarii x 4 politici, ~15 min
 #   sbatch scripts/hpc_atacuri.sbatch                   toate 51 x 4 politici, atac + benign
 #   sbatch scripts/hpc_atacuri.sbatch full qwen3:32b    alt model (judecatorul ramane llama3.1)
+#   sbatch scripts/hpc_atacuri.sbatch full qwen3:14b none   doar baseline-ul, pentru repetari (~50 min)
 # Urmaresti cu:  squeue -u $USER ; tail -f logs/slurm-<id>.out
 # Daca partitia ucsx nu iti e permisa, schimbi --partition (sinfo arata ce ai).
 MODE=${1:-full}
 MODEL=${2:-qwen3:14b}
+POLICIES=${3:-none,keyword,allowlist,judge}
 cd "$SLURM_SUBMIT_DIR"
 mkdir -p logs
 
@@ -28,7 +30,7 @@ export OLLAMA_KEEP_ALIVE=-1
 export OLLAMA_MAX_LOADED_MODELS=2
 export PATH="$HOME/ollama/bin:$PATH"
 
-echo "nod: $(hostname)  gpu: $(nvidia-smi -L 2>/dev/null | head -1)  model: $MODEL  mod: $MODE"
+echo "nod: $(hostname)  gpu: $(nvidia-smi -L 2>/dev/null | head -1)  model: $MODEL  politici: $POLICIES  mod: $MODE"
 ollama serve > "logs/ollama-$SLURM_JOB_ID.log" 2>&1 &
 OLLAMA_PID=$!
 trap "kill $OLLAMA_PID 2>/dev/null" EXIT
@@ -43,8 +45,8 @@ ollama pull llama3.1 2>/dev/null || true
 ollama list
 
 if [ "$MODE" = "test" ]; then
-  ./scripts/run_atacuri_test.sh "$MODEL"
+  ./scripts/run_atacuri_test.sh "$MODEL" "$POLICIES"
 else
-  ./scripts/run_atacuri.sh "$MODEL"
+  ./scripts/run_atacuri.sh "$MODEL" "$POLICIES"
 fi
 echo "GATA. rezultate: $(ls -t results/run_*.csv | head -2 | tr '\n' ' ')"

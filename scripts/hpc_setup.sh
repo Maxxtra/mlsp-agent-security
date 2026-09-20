@@ -14,16 +14,23 @@ fi
 source "$HOME/miniconda3/etc/profile.d/conda.sh"
 
 echo "== 2/4 mediul mlsp-agent"
+# fara canalul 'defaults' al Anaconda (cere acceptarea termenilor lor); conda-forge ajunge
+conda config --remove channels defaults 2>/dev/null || true
+conda config --add channels conda-forge 2>/dev/null || true
 conda env list | grep -q '^mlsp-agent ' || conda env create -f environment.yml
 
 echo "== 3/4 ollama (binarul de linux, fara root)"
 if [ ! -x "$HOME/ollama/bin/ollama" ]; then
+  # arhiva oficiala e .tar.zst si are nevoie de zstd; daca nu e pe sistem, il luam din conda-forge
+  command -v zstd >/dev/null || conda install -y -n mlsp-agent zstd
+  export PATH="$HOME/miniconda3/envs/mlsp-agent/bin:$PATH"
   mkdir -p "$HOME/ollama"
-  curl -L https://ollama.com/download/ollama-linux-amd64.tgz -o /tmp/ollama-$USER.tgz
-  tar -xzf /tmp/ollama-$USER.tgz -C "$HOME/ollama"
-  rm -f /tmp/ollama-$USER.tgz
+  curl -fL https://github.com/ollama/ollama/releases/latest/download/ollama-linux-amd64.tar.zst -o /tmp/ollama-$USER.tar.zst
+  zstd -d -c /tmp/ollama-$USER.tar.zst | tar -xf - -C "$HOME/ollama"
+  rm -f /tmp/ollama-$USER.tar.zst
 fi
 mkdir -p "$HOME/ollama/models"
+"$HOME/ollama/bin/ollama" --version
 
 echo "== 4/4 modelele (~14 GB, o singura data; serve porneste doar cat sa descarce)"
 export OLLAMA_HOST=127.0.0.1:$((20000 + RANDOM % 10000))
