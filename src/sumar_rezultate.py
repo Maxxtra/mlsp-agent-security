@@ -7,7 +7,7 @@ Scrie tabelul in markdown, direct de lipit in lucrare.
 import argparse, csv, glob, json, os, statistics as st, collections
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-POLICIES = ["none", "keyword", "allowlist", "judge"]
+POLICIES = ["none", "keyword", "allowlist", "judge", "laya", "laya_short"]
 
 
 def latest(pattern):
@@ -80,7 +80,7 @@ def main():
 
     c = collections.Counter(r["attack_id"] for r in A if r["compromised"] == "1")
     print(f"\nScenarii compromise in cel putin o rulare: {len(c)}/{len(set(r['attack_id'] for r in A))}: "
-          + ", ".join(f"{k} ({v}/{len(POLICIES)})" for k, v in sorted(c.items())))
+          + ", ".join(f"{k} ({v}/{len(set(r['policy'] for r in A))})" for k, v in sorted(c.items())))
 
 
 if __name__ == "__main__":

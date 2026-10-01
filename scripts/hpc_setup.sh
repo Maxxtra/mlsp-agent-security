@@ -46,3 +46,11 @@ kill $OLLAMA_PID
 echo
 echo "gata. spatiu folosit in home:"; du -sh "$HOME/ollama" "$HOME/miniconda3" 2>/dev/null
 echo "urmatorul pas:  sbatch scripts/hpc_atacuri.sbatch test"
+
+echo
+echo "== 5/5 laya (judecatorul clasificator) + checkpoint-urile lui in \$HOME/hf_cache"
+conda activate mlsp-agent
+pip install laya
+export HF_HOME="$HOME/hf_cache"
+python -c "from laya import Router; Router(device='cpu').preload(['english', 'multilingual'])"
+du -sh "$HF_HOME" 2>/dev/null

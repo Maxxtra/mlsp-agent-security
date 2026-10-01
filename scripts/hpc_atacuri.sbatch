@@ -11,6 +11,8 @@
 #   sbatch scripts/hpc_atacuri.sbatch                   toate 51 x 4 politici, atac + benign
 #   sbatch scripts/hpc_atacuri.sbatch full qwen3:32b    alt model (judecatorul ramane llama3.1)
 #   sbatch scripts/hpc_atacuri.sbatch full qwen3:14b none   doar baseline-ul, pentru repetari (~50 min)
+#   sbatch scripts/hpc_atacuri.sbatch test qwen3:14b laya   doar judecatorul Laya, 5 scenarii
+#   sbatch scripts/hpc_atacuri.sbatch full qwen3:14b laya   doar judecatorul Laya, toate scenariile
 # Urmaresti cu:  squeue -u $USER ; tail -f logs/slurm-<id>.out
 # Daca partitia ucsx nu iti e permisa, schimbi --partition (sinfo arata ce ai).
 MODE=${1:-full}
@@ -29,6 +31,8 @@ export OLLAMA_MODELS="$HOME/ollama/models"
 export OLLAMA_KEEP_ALIVE=-1
 export OLLAMA_MAX_LOADED_MODELS=2
 export PATH="$HOME/ollama/bin:$PATH"
+# checkpoint-urile Laya, descarcate de hpc_setup.sh (nodul poate fi fara internet)
+export HF_HOME="$HOME/hf_cache"
 
 echo "nod: $(hostname)  gpu: $(nvidia-smi -L 2>/dev/null | head -1)  model: $MODEL  politici: $POLICIES  mod: $MODE"
 ollama serve > "logs/ollama-$SLURM_JOB_ID.log" 2>&1 &

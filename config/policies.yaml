@@ -123,3 +123,24 @@ judge:
   # judecatorul blocheaza tot si rezultatul arata ca o aparare perfecta cu
   # utilitate zero. De aia fiecare decizie se scrie in logs/judge.jsonl.
   on_error: "block"
+
+# Al doilea judecator: clasificatorul Laya, ruleaza local prin pip (nu prin
+# Ollama). Router-ul alege checkpoint-ul dupa limba: laya pentru engleza,
+# laya-multilingual pentru restul. judge: de mai sus ramane neschimbat.
+laya:
+  model: "router"
+
+  # null = Laya alege singur: cuda (NVIDIA), mps (Mac), xpu (Intel), altfel cpu.
+  # Se poate forta cu variabila de mediu LAYA_DEVICE=cuda|mps|cpu. Vezi docs/laya.md.
+  device: null
+
+  # La fel ca la judge: daca modelul cade, blocheaza.
+  on_error: "block"
+
+  # Promptul e acelasi ca la judge (prompts/judge.md). Implicit Laya da
+  # intrebarii doar 192 tokeni pe modelul englez si ar taia promptul;
+  # 320 il incape intreg. max_len 1024 lasa ~700 tokeni pentru task +
+  # argumente. Modelul englez e antrenat pe 512 (ModernBERT merge pana la
+  # 8192); null = valorile implicite Laya.
+  head_max_len: 320
+  max_len: 1024
