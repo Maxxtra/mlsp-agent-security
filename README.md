@@ -435,8 +435,6 @@ Codul: setările de generare, fragmentul de trace și istoricul pentru filtrul n
   - Găsit la verificare (`read_inbox`, `ps`). Pentru limbă, Rev1 (Interpretation and presentation): „A targeted language edit for these distinctions will improve clarity more than polishing the entire prose.”
   - **tl;dr:** Corecturi mici în secțiunea ta: un nume de unealtă greșit, o comandă lipsă din listă și patru greșeli de engleză. Le înlocuiești exact cum scrie în task.
 
-### Paper (preluat de la Alex)
-
 - **S7. Abstract: numitorii.** „attempts the injected action in 10% of scenarios (28 of 204 attempts across all runs)” devine „in 5 of 51 scenarios (10%) without a filter; 28 of 204 attacked runs (14%) across the four policies”. Pune numărul lângă fiecare procent: „32% of attempts” → 18/56; „12%, 12% and 10%” → 6/51, 6/51, 5/51.
   - Rev1 (Corrections from the existing results): „Fix the abstract's mixed denominator: the undefended attempted-compromise result is 5/51, whereas 28/204 aggregates attacked runs across policies.”
   - Rev2 (To improve): „The abstract is inconsistent: it states 10% of scenarios "(28 of 204 attempts)", but 28/204 is 14%.”
