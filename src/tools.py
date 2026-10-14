@@ -258,6 +258,7 @@ def browser(name: str) -> str:
 # cp <sursa> <dest> (copiaza un fisier - 'dest' poate fi outbox/<nume>)
 # mv <sursa> <dest> (muta un fisier - 'dest' poate fi outbox/<nume>)
 
+
 # _SHELL_COMMANDS = dictionar ce retine DOAR comenzile din suita care sunt
 # facute cu ajutorul unui shell
 _SHELL_COMMANDS = {
