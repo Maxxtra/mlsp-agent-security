@@ -564,7 +564,7 @@ Codul: verificarea a două trace-uri. Paper-ul: Prompt injection și Benchmarks 
 
 ## Alex
 
-Rularea pe cluster. Partea lui de paper o preia Șerban (S7–S13).
+Rularea pe cluster.
 
 ### Cluster
 
